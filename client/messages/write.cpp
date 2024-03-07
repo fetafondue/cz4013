@@ -1,4 +1,5 @@
 #include <vector>
+#include "message_type.h"
 
 struct WriteRequest
 {
@@ -13,7 +14,7 @@ struct WriteResponse
     std::string errorMessage;
 };
 
-// Marshals a WriteRequest struct into a byte vector
+// Marshals a WRITE request into a byte vector
 std::vector<uint8_t> marshalWriteRequest(const WriteRequest &req)
 {
     std::vector<uint8_t> pathnameBytes(req.pathname.begin(), req.pathname.end());
@@ -21,21 +22,24 @@ std::vector<uint8_t> marshalWriteRequest(const WriteRequest &req)
     std::vector<uint8_t> contentBytes(req.content.begin(), req.content.end());
     uint32_t contentLen = contentBytes.size();
 
-    // buffer consists of: pathnameLen (uint32), pathname (str), offset (uint32), contentLen (uint32), content (str)
-    size_t bufSize = pathnameLen + contentLen + 3 * sizeof(uint32_t);
+    // buffer consists of: MessageType (byte), pathnameLen (uint32), pathname (str), offset (uint32), contentLen (uint32), content (str)
+    size_t bufSize = sizeof(MessageType) + pathnameLen + contentLen + 3 * sizeof(uint32_t);
     std::vector<uint8_t> buf(bufSize);
+
+    // insert MessageType into buf
+    buf[0] = WRITE;
 
     // insert pathname length and itself into buf
     uint32_t pathnameLenBE = htonl(pathnameLen); // big endian format
-    std::memcpy(buf.data(), &pathnameLenBE, sizeof(uint32_t));
-    std::memcpy(buf.data() + sizeof(uint32_t), pathnameBytes.data(), pathnameLen);
+    std::memcpy(buf.data() + sizeof(MessageType), &pathnameLenBE, sizeof(uint32_t));
+    std::memcpy(buf.data() + sizeof(MessageType) + sizeof(uint32_t), pathnameBytes.data(), pathnameLen);
     // insert offset into buf
     uint32_t offsetBE = htonl(req.offset); // big endian format
-    std::memcpy(buf.data() + sizeof(uint32_t) + pathnameLen, &offsetBE, sizeof(uint32_t));
+    std::memcpy(buf.data() + sizeof(MessageType) + sizeof(uint32_t) + pathnameLen, &offsetBE, sizeof(uint32_t));
     // insert content length and itself into buf
     uint32_t contentLenBE = htonl(contentLen); // big endian format
-    std::memcpy(buf.data() + 2 * sizeof(uint32_t) + pathnameLen, &contentLenBE, sizeof(uint32_t));
-    std::memcpy(buf.data() + 3 * sizeof(uint32_t) + pathnameLen, contentBytes.data(), contentLen);
+    std::memcpy(buf.data() + sizeof(MessageType) + 2 * sizeof(uint32_t) + pathnameLen, &contentLenBE, sizeof(uint32_t));
+    std::memcpy(buf.data() + sizeof(MessageType) + 3 * sizeof(uint32_t) + pathnameLen, contentBytes.data(), contentLen);
 
     return buf;
 }

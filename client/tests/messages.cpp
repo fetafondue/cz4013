@@ -2,9 +2,8 @@
 #include "../messages/delete.h"
 
 // example
-void deleteMessageTest()
+void deleteMessageRequestTest()
 {
-    // --- TEST MARSHAL REQUEST ---
     DeleteRequest req;
     req.pathname = "/path/to/some/file.pdf";
     req.offset = 4294967295;
@@ -16,8 +15,11 @@ void deleteMessageTest()
         printf("\\x%.2x", b);
     std::cout << std::endl;
     // paste the printed value into server side test and see if the req unmarshals to the original one
+}
 
-    // --- TEST UNMARSHAL RESPONSE ---
+// example
+void deleteMessageResponseTest()
+{
     std::vector<uint8_t> marshalledResponse;
     // paste in the (marshalled) byte values from server side test
     uint8_t byteValues[] = {0, 0, 0, 0, 24, 115, 111, 109, 101, 32, 101, 114, 114, 111, 114, 32, 111, 99, 99, 117, 114, 114, 101, 100, 32, 62, 58, 40, 41};
@@ -31,6 +33,7 @@ void deleteMessageTest()
 
 int main()
 {
-    deleteMessageTest();
+    deleteMessageRequestTest();
+
     return 0;
 }

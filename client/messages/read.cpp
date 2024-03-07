@@ -1,4 +1,5 @@
 #include <vector>
+#include "message_type.h"
 
 struct ReadRequest
 {
@@ -14,26 +15,29 @@ struct ReadResponse
     std::string errorMessage;
 };
 
-// Marshals a ReadRequest struct into a byte vector
+// Marshals a READ request into a byte vector
 std::vector<uint8_t> marshalReadRequest(const ReadRequest &req)
 {
     std::vector<uint8_t> pathnameBytes(req.pathname.begin(), req.pathname.end());
     uint32_t pathnameLen = pathnameBytes.size();
 
-    // buffer consists of: pathnameLen (uint32), pathname (str), offset (uint32), numBytes (uint32)
-    size_t bufSize = pathnameLen + 3 * sizeof(uint32_t);
+    // buffer consists of: MessageType (byte), pathnameLen (uint32), pathname (str), offset (uint32), numBytes (uint32)
+    size_t bufSize = sizeof(MessageType) + pathnameLen + 3 * sizeof(uint32_t);
     std::vector<uint8_t> buf(bufSize);
+
+    // insert MessageType into buf
+    buf[0] = READ;
 
     // insert pathname length and itself into buf
     uint32_t pathnameLenBE = htonl(pathnameLen); // big endian format
-    std::memcpy(buf.data(), &pathnameLenBE, sizeof(uint32_t));
-    std::memcpy(buf.data() + sizeof(uint32_t), pathnameBytes.data(), pathnameLen);
+    std::memcpy(buf.data() + sizeof(MessageType), &pathnameLenBE, sizeof(uint32_t));
+    std::memcpy(buf.data() + sizeof(MessageType) + sizeof(uint32_t), pathnameBytes.data(), pathnameLen);
     // insert offset into buf
     uint32_t offsetBE = htonl(req.offset); // big endian format
-    std::memcpy(buf.data() + sizeof(uint32_t) + pathnameLen, &offsetBE, sizeof(uint32_t));
+    std::memcpy(buf.data() + sizeof(MessageType) + sizeof(uint32_t) + pathnameLen, &offsetBE, sizeof(uint32_t));
     // insert numBytes into buf
     uint32_t numBytesBE = htonl(req.numBytes); // big endian format
-    std::memcpy(buf.data() + 2 * sizeof(uint32_t) + pathnameLen, &numBytesBE, sizeof(uint32_t));
+    std::memcpy(buf.data() + sizeof(MessageType) + 2 * sizeof(uint32_t) + pathnameLen, &numBytesBE, sizeof(uint32_t));
 
     return buf;
 }

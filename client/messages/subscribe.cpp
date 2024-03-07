@@ -1,4 +1,5 @@
 #include <vector>
+#include "message_type.h"
 
 struct SubscribeRequest
 {
@@ -12,23 +13,26 @@ struct SubscribeResponse
     std::string errorMessage;
 };
 
-// Marshals a SubscribeRequest struct into a byte vector
+// Marshals a SUBSCRIBE request into a byte vector
 std::vector<uint8_t> marshalSubscribeRequest(const SubscribeRequest &req)
 {
     std::vector<uint8_t> pathnameBytes(req.pathname.begin(), req.pathname.end());
     uint32_t pathnameLen = pathnameBytes.size();
 
-    // buffer consists of: pathnameLen (uint32), pathname (str), monitorIntervalSeconds (uint32)
-    size_t bufSize = pathnameLen + 2 * sizeof(uint32_t);
+    // buffer consists of: MessageType (byte), pathnameLen (uint32), pathname (str), monitorIntervalSeconds (uint32)
+    size_t bufSize = sizeof(MessageType) + pathnameLen + 2 * sizeof(uint32_t);
     std::vector<uint8_t> buf(bufSize);
+
+    // insert MessageType into buf
+    buf[0] = SUBSCRIBE;
 
     // insert pathname length and itself into buf
     uint32_t pathnameLenBE = htonl(pathnameLen); // big endian format
-    std::memcpy(buf.data(), &pathnameLenBE, sizeof(uint32_t));
-    std::memcpy(buf.data() + sizeof(uint32_t), pathnameBytes.data(), pathnameLen);
+    std::memcpy(buf.data() + sizeof(MessageType), &pathnameLenBE, sizeof(uint32_t));
+    std::memcpy(buf.data() + sizeof(MessageType) + sizeof(uint32_t), pathnameBytes.data(), pathnameLen);
     // insert monitorIntervalSeconds into buf
     uint32_t monitorIntervalSecondsBE = htonl(req.monitorIntervalSeconds); // big endian format
-    std::memcpy(buf.data() + sizeof(uint32_t) + pathnameLen, &monitorIntervalSecondsBE, sizeof(uint32_t));
+    std::memcpy(buf.data() + sizeof(MessageType) + sizeof(uint32_t) + pathnameLen, &monitorIntervalSecondsBE, sizeof(uint32_t));
 
     return buf;
 }
