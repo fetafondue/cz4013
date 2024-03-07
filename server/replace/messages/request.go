@@ -23,8 +23,7 @@ func MarshalRequest(req ReplaceRequest) []byte {
 	contentLen := len(contentBytes)
 
 	// buffer consists of: pathnameLen (uint32), Pathname (str), Offset (uint32), contentLen (uint32), Content (str)
-	bufLen := pathnameLen + contentLen + 3*common.Uint32ByteLength
-	buf := make([]byte, bufLen)
+	buf := make([]byte, pathnameLen+contentLen+3*common.Uint32ByteLength)
 
 	// insert Pathname length and itself into buf
 	binary.BigEndian.PutUint32(buf[0:common.Uint32ByteLength], uint32(pathnameLen))
@@ -33,7 +32,7 @@ func MarshalRequest(req ReplaceRequest) []byte {
 	binary.BigEndian.PutUint32(buf[common.Uint32ByteLength+pathnameLen:2*common.Uint32ByteLength+pathnameLen], req.Offset)
 	// insert Content length and itself into buf
 	binary.BigEndian.PutUint32(buf[2*common.Uint32ByteLength+pathnameLen:3*common.Uint32ByteLength+pathnameLen], uint32(contentLen))
-	copy(buf[3*common.Uint32ByteLength+pathnameLen:bufLen], contentBytes)
+	copy(buf[3*common.Uint32ByteLength+pathnameLen:], contentBytes)
 
 	return buf
 }
@@ -70,6 +69,6 @@ func UnmarshalRequest(req []byte) (*ReplaceRequest, error) {
 	return &ReplaceRequest{
 		Pathname: pathname,
 		Offset:   offset,
-		Content: content,
+		Content:  content,
 	}, nil
 }

@@ -20,14 +20,13 @@ func MarshalRequest(req SubscribeRequest) []byte {
 	pathnameLen := len(pathnameBytes)
 
 	// buffer consists of: pathnameLen (uint32), Pathname (str), MonitorIntervalSeconds (uint32)
-	bufLen := pathnameLen + 2*common.Uint32ByteLength
-	buf := make([]byte, bufLen)
+	buf := make([]byte, pathnameLen+2*common.Uint32ByteLength)
 
 	// insert Pathname length and itself into buf
 	binary.BigEndian.PutUint32(buf[0:common.Uint32ByteLength], uint32(pathnameLen))
 	copy(buf[common.Uint32ByteLength:common.Uint32ByteLength+pathnameLen], pathnameBytes)
 	// insert MonitorIntervalSeconds into buf
-	binary.BigEndian.PutUint32(buf[common.Uint32ByteLength+pathnameLen:bufLen], req.MonitorIntervalSeconds)
+	binary.BigEndian.PutUint32(buf[common.Uint32ByteLength+pathnameLen:], req.MonitorIntervalSeconds)
 
 	return buf
 }

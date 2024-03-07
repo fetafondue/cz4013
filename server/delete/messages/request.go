@@ -21,8 +21,7 @@ func MarshalRequest(req DeleteRequest) []byte {
 	pathnameLen := len(pathnameBytes)
 
 	// buffer consists of: pathnameLen (uint32), Pathname (str), Offset (uint32), NumBytes (uint32)
-	bufLen := pathnameLen + 3*common.Uint32ByteLength
-	buf := make([]byte, bufLen)
+	buf := make([]byte, pathnameLen+3*common.Uint32ByteLength)
 
 	// insert Pathname length and itself into buf
 	binary.BigEndian.PutUint32(buf[0:common.Uint32ByteLength], uint32(pathnameLen))
@@ -30,7 +29,7 @@ func MarshalRequest(req DeleteRequest) []byte {
 	// insert Offset into buf
 	binary.BigEndian.PutUint32(buf[common.Uint32ByteLength+pathnameLen:2*common.Uint32ByteLength+pathnameLen], req.Offset)
 	// insert NumBytes into buf
-	binary.BigEndian.PutUint32(buf[2*common.Uint32ByteLength+pathnameLen:bufLen], req.NumBytes)
+	binary.BigEndian.PutUint32(buf[2*common.Uint32ByteLength+pathnameLen:], req.NumBytes)
 
 	return buf
 }
