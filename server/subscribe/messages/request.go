@@ -13,24 +13,6 @@ type SubscribeRequest struct {
 	MonitorIntervalSeconds uint32
 }
 
-// todo this is for client side to implement
-// MarshalRequest marshals a SubscribeRequest struct into a byte slice
-func MarshalRequest(req SubscribeRequest) []byte {
-	pathnameBytes := []byte(req.Pathname)
-	pathnameLen := len(pathnameBytes)
-
-	// buffer consists of: pathnameLen (uint32), Pathname (str), MonitorIntervalSeconds (uint32)
-	buf := make([]byte, pathnameLen+2*common.Uint32ByteLength)
-
-	// insert Pathname length and itself into buf
-	binary.BigEndian.PutUint32(buf[0:common.Uint32ByteLength], uint32(pathnameLen))
-	copy(buf[common.Uint32ByteLength:common.Uint32ByteLength+pathnameLen], pathnameBytes)
-	// insert MonitorIntervalSeconds into buf
-	binary.BigEndian.PutUint32(buf[common.Uint32ByteLength+pathnameLen:], req.MonitorIntervalSeconds)
-
-	return buf
-}
-
 func validateMarshalledRequest(req []byte) (pathnameLen int, err error) {
 	// ensure that the byte slice is at least its minimum length (2 uint32s)
 	if len(req) < 2*common.Uint32ByteLength {

@@ -14,26 +14,6 @@ type DeleteRequest struct {
 	NumBytes uint32
 }
 
-// todo this is for client side to implement
-// MarshalRequest marshals a DeleteRequest struct into a byte slice
-func MarshalRequest(req DeleteRequest) []byte {
-	pathnameBytes := []byte(req.Pathname)
-	pathnameLen := len(pathnameBytes)
-
-	// buffer consists of: pathnameLen (uint32), Pathname (str), Offset (uint32), NumBytes (uint32)
-	buf := make([]byte, pathnameLen+3*common.Uint32ByteLength)
-
-	// insert Pathname length and itself into buf
-	binary.BigEndian.PutUint32(buf[0:common.Uint32ByteLength], uint32(pathnameLen))
-	copy(buf[common.Uint32ByteLength:common.Uint32ByteLength+pathnameLen], pathnameBytes)
-	// insert Offset into buf
-	binary.BigEndian.PutUint32(buf[common.Uint32ByteLength+pathnameLen:2*common.Uint32ByteLength+pathnameLen], req.Offset)
-	// insert NumBytes into buf
-	binary.BigEndian.PutUint32(buf[2*common.Uint32ByteLength+pathnameLen:], req.NumBytes)
-
-	return buf
-}
-
 func validateMarshalledRequest(req []byte) (pathnameLen int, err error) {
 	// ensure that the byte slice is at least its minimum length (3 uint32s)
 	if len(req) < 3*common.Uint32ByteLength {

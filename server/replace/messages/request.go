@@ -14,29 +14,6 @@ type ReplaceRequest struct {
 	Content  string
 }
 
-// todo this is for client side to implement
-// MarshalRequest marshals a ReplaceRequest struct into a byte slice
-func MarshalRequest(req ReplaceRequest) []byte {
-	pathnameBytes := []byte(req.Pathname)
-	pathnameLen := len(pathnameBytes)
-	contentBytes := []byte(req.Content)
-	contentLen := len(contentBytes)
-
-	// buffer consists of: pathnameLen (uint32), Pathname (str), Offset (uint32), contentLen (uint32), Content (str)
-	buf := make([]byte, pathnameLen+contentLen+3*common.Uint32ByteLength)
-
-	// insert Pathname length and itself into buf
-	binary.BigEndian.PutUint32(buf[0:common.Uint32ByteLength], uint32(pathnameLen))
-	copy(buf[common.Uint32ByteLength:common.Uint32ByteLength+pathnameLen], pathnameBytes)
-	// insert Offset into buf
-	binary.BigEndian.PutUint32(buf[common.Uint32ByteLength+pathnameLen:2*common.Uint32ByteLength+pathnameLen], req.Offset)
-	// insert Content length and itself into buf
-	binary.BigEndian.PutUint32(buf[2*common.Uint32ByteLength+pathnameLen:3*common.Uint32ByteLength+pathnameLen], uint32(contentLen))
-	copy(buf[3*common.Uint32ByteLength+pathnameLen:], contentBytes)
-
-	return buf
-}
-
 func validateMarshalledRequest(req []byte) (pathnameLen int, err error) {
 	// ensure that the byte slice is at least its minimum length (3 uint32s)
 	if len(req) < 3*common.Uint32ByteLength {
