@@ -3,7 +3,7 @@ package replace
 import "github.com/cz4013/server/apis/replace/messages"
 
 // Main entrypoint
-func Handler(data []byte) []byte {
+func Handler(fileStorePath string, data []byte) []byte {
 	req, err := messages.UnmarshalRequest(data)
 	if err != nil {
 		return messages.MarshalResponse(messages.ReplaceResponse{

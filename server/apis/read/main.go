@@ -1,9 +1,12 @@
 package read
 
-import "github.com/cz4013/server/apis/read/messages"
+import (
+	"github.com/cz4013/server/apis/read/messages"
+	"github.com/cz4013/server/apis/read/service"
+)
 
 // Main entrypoint
-func Handler(data []byte) []byte {
+func Handler(fileStorePath string, data []byte) []byte {
 	req, err := messages.UnmarshalRequest(data)
 	if err != nil {
 		return messages.MarshalResponse(messages.ReadResponse{
@@ -12,7 +15,7 @@ func Handler(data []byte) []byte {
 		})
 	}
 
-	// TODO
-	_ = req
-	return []byte("")
+	res := service.Read(fileStorePath, req)
+
+	return messages.MarshalResponse(res)
 }
