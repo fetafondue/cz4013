@@ -69,7 +69,7 @@ func main() {
 	fmt.Println("Started server with file directory: fileStorePath, ")
 
 	// TODO: delete this for a udp listener that calls routeRequest
-	data := []byte("\x01\x00\x00\x00\x08\x66\x69\x6c\x65\x2e\x74\x78\x74\x00\x00\x00\x01\x00\x00\x00\x02")
+	data := []byte("\x02\x00\x00\x00\x08\x66\x69\x6c\x65\x2e\x74\x78\x74\x00\x00\x00\x01\x00\x00\x00\x03\x65\x65\x65")
 	res := routeRequest(fileStorePath, data)
 	fmt.Println(res)
 }

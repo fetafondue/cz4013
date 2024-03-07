@@ -1,6 +1,9 @@
 package write
 
-import "github.com/cz4013/server/apis/write/messages"
+import (
+	"github.com/cz4013/server/apis/write/messages"
+	"github.com/cz4013/server/apis/write/service"
+)
 
 // Main entrypoint
 func Handler(fileStorePath string, data []byte) []byte {
@@ -12,7 +15,7 @@ func Handler(fileStorePath string, data []byte) []byte {
 		})
 	}
 
-	// TODO
-	_ = req
-	return []byte("")
+	res := service.Write(fileStorePath, req)
+
+	return messages.MarshalResponse(res)
 }

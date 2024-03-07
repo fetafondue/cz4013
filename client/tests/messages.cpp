@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../messages/delete.h"
 #include "../messages/read.h"
+#include "../messages/write.h"
 
 // example
 void deleteMessageRequestTest()
@@ -33,6 +34,21 @@ void readMessageRequestTest()
     // paste the printed value into server side test and see if the req unmarshals to the original one
 }
 
+void writeMessageRequestTest()
+{
+    WriteRequest req;
+    req.pathname = "file.txt";
+    req.offset = 1;
+    req.content = "eee";
+
+    std::vector<uint8_t> marshalledReq = marshalWriteRequest(req);
+    std::cout << "Marshalled Request: ";
+    for (uint8_t b : marshalledReq)
+        printf("\\x%.2x", b);
+    std::cout << std::endl;
+    // paste the printed value into server side test and see if the req unmarshals to the original one
+}
+
 // example
 void deleteMessageResponseTest()
 {
@@ -49,7 +65,7 @@ void deleteMessageResponseTest()
 
 int main()
 {
-    readMessageRequestTest();
+    writeMessageRequestTest();
 
     return 0;
 }
