@@ -73,6 +73,8 @@ void handleReadRequest(ReadRequest *req) {
     for (int i = 0; i < strlen(buffer); i++) {
         pathname += buffer[i];
     }
+    pathname.erase(std::remove_if(pathname.begin(), pathname.end(),::isspace),
+        pathname.end());
     req->pathname = pathname;
 
     printf("Please enter the offset\n");
