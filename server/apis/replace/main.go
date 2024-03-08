@@ -1,7 +1,7 @@
 package replace
 
 import (
-	"fmt"
+	"log"
 	"net"
 
 	"github.com/cz4013/server/apis/replace/messages"
@@ -17,9 +17,13 @@ func Handler(fileStorePath string, clientAddr *net.UDPAddr, data []byte) []byte 
 		})
 	}
 
-	fmt.Printf("Received request from client %s: %+v", clientAddr, req)
+	log.Printf("Received request from client %s: %+v", clientAddr, req)
 
-	// TODO
+	// TODO process request
 	_ = req
-	return []byte("")
+	res := messages.ReplaceResponse{}
+
+	log.Printf("Response to send to client %s: %+v", clientAddr, res)
+
+	return messages.MarshalResponse(res)
 }

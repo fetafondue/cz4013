@@ -53,7 +53,7 @@ func handlePacket(conn *net.UDPConn, fileStorePath string) {
 	// read data from client
 	n, addr, err := conn.ReadFromUDP(buffer)
 	if err != nil {
-		fmt.Println("Error reading data:", err)
+		log.Println("Error reading data:", err)
 		return
 	}
 
@@ -64,7 +64,7 @@ func handlePacket(conn *net.UDPConn, fileStorePath string) {
 	// respond to client
 	_, err = conn.WriteToUDP(response, addr)
 	if err != nil {
-		fmt.Println("Error sending response:", err)
+		log.Println("Error sending response:", err)
 		return
 	}
 }
@@ -84,7 +84,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	fmt.Println("Started UDP server.\n",
+	log.Println("Started UDP server.\n",
 		"File directory:", fileStorePath, "\n",
 		"Listening on:", conn.LocalAddr(), "(use ifconfig/ipconfig to get the IP address)")
 

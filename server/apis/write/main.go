@@ -1,7 +1,7 @@
 package write
 
 import (
-	"fmt"
+	"log"
 	"net"
 
 	"github.com/cz4013/server/apis/write/messages"
@@ -18,11 +18,11 @@ func Handler(fileStorePath string, clientAddr *net.UDPAddr, data []byte) []byte 
 		})
 	}
 
-	fmt.Printf("Received request from client %s: %+v", clientAddr, req)
+	log.Printf("Received request from client %s: %+v", clientAddr, req)
 
 	res := service.Write(fileStorePath, req)
 
-	fmt.Printf("Response to send to client %s: %+v", clientAddr, res)
+	log.Printf("Response to send to client %s: %+v", clientAddr, res)
 
 	return messages.MarshalResponse(res)
 }
