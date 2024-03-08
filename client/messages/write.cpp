@@ -1,18 +1,6 @@
 #include <vector>
 #include "message_type.h"
-
-struct WriteRequest
-{
-    std::string pathname;
-    uint32_t offset;
-    std::string content;
-};
-
-struct WriteResponse
-{
-    bool success;
-    std::string errorMessage;
-};
+#include "write.h"
 
 // Marshals a WRITE request into a byte vector
 std::vector<uint8_t> marshalWriteRequest(const WriteRequest &req)

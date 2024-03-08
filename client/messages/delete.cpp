@@ -1,18 +1,6 @@
 #include <vector>
 #include "message_type.h"
-
-struct DeleteRequest
-{
-    std::string pathname;
-    uint32_t offset;
-    uint32_t numBytes;
-};
-
-struct DeleteResponse
-{
-    bool success;
-    std::string errorMessage;
-};
+#include "delete.h"
 
 // Marshals a DELETE request into a byte vector
 std::vector<uint8_t> marshalDeleteRequest(const DeleteRequest &req)

@@ -1,17 +1,6 @@
 #include <vector>
 #include "message_type.h"
-
-struct SubscribeRequest
-{
-    std::string pathname;
-    uint32_t monitorIntervalSeconds;
-};
-
-struct SubscribeResponse
-{
-    bool success;
-    std::string errorMessage;
-};
+#include "subscribe.h"
 
 // Marshals a SUBSCRIBE request into a byte vector
 std::vector<uint8_t> marshalSubscribeRequest(const SubscribeRequest &req)

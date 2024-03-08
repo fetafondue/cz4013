@@ -1,19 +1,6 @@
 #include <vector>
 #include "message_type.h"
-
-struct ReadRequest
-{
-    std::string pathname;
-    uint32_t offset;
-    uint32_t numBytes;
-};
-
-struct ReadResponse
-{
-    bool success;
-    std::string content;
-    std::string errorMessage;
-};
+#include "read.h"
 
 // Marshals a READ request into a byte vector
 std::vector<uint8_t> marshalReadRequest(const ReadRequest &req)
