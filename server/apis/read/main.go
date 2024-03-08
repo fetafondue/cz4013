@@ -18,11 +18,11 @@ func Handler(fileStorePath string, clientAddr *net.UDPAddr, data []byte) []byte 
 		})
 	}
 
-	log.Printf("Received request from client %s: %+v", clientAddr, req)
+	log.Printf("Received request from client %s: %+v\n", clientAddr, req)
 
 	res := service.Read(fileStorePath, req)
 
-	log.Printf("Response to send to client %s: %+v", clientAddr, res)
+	log.Printf("Response to send to client %s: %+v\n", clientAddr, res)
 
 	return messages.MarshalResponse(res)
 }
