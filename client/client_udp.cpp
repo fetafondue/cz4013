@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
                 marshalledReq = marshalReadRequest(req);
 
                 printf("Sending read request to server...\n");
-                n = sendto(sock, &marshalledReq, sizeof(marshalledReq), 0,
+                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
                 n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
                 marshalledReq = marshalWriteRequest(req);
 
                 printf("Sending read request to server...\n");
-                n = sendto(sock, &marshalledReq, sizeof(marshalledReq), 0,
+                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
                 n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
