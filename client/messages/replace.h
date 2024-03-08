@@ -2,6 +2,7 @@
 #define REPLACE_H
 
 #include <vector>
+#include <string>
 
 struct ReplaceRequest
 {

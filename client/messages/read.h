@@ -2,6 +2,7 @@
 #define READ_H
 
 #include <vector>
+#include <string>
 
 struct ReadRequest
 {

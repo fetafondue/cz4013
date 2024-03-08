@@ -2,6 +2,7 @@
 #define SUBSCRIBE_H
 
 #include <vector>
+#include <string>
 
 struct SubscribeRequest
 {

@@ -2,6 +2,7 @@
 #define WRITE_H
 
 #include <vector>
+#include <string>
 
 struct WriteRequest
 {
