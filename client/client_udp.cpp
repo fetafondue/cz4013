@@ -38,7 +38,9 @@ int main(int argc, char *argv[]) {
         "What would you like to do?\n"
         "1. Read file content\n"
         "2. Write to file\n"
-        "3. Monitor updates\n");
+        "3. Monitor updates\n"
+        "4. Replace file content\n"
+        "5. Delete file content\n");
     bzero(buffer, 1024);
     fgets(buffer, 1023, stdin);
     switch (buffer[0]) {
@@ -71,6 +73,14 @@ int main(int argc, char *argv[]) {
             }
             break;
         case '3':
+            // monitor updates
+            printf("You have selected option 3");
+            break;
+        case '4':
+            // monitor updates
+            printf("You have selected option 3");
+            break;
+        case '5':
             // monitor updates
             printf("You have selected option 3");
             break;
