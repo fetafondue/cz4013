@@ -10,6 +10,9 @@
 
 #include <iostream>
 
+#include "messages/read.h"
+#include "messages/write.h"
+
 void error(const char *msg);
 
 int main(int argc, char *argv[]) {
@@ -18,7 +21,6 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in server, from;
     struct hostent *hp;
     char buffer[1024];
-    char message[1024];
 
     if (argc != 3) {
         printf("Usage: server port\n");
@@ -34,64 +36,80 @@ int main(int argc, char *argv[]) {
     bcopy((char *)hp->h_addr, (char *)&server.sin_addr, hp->h_length);
     server.sin_port = htons(atoi(argv[2]));
     length = sizeof(struct sockaddr_in);
-    printf(
-        "What would you like to do?\n"
-        "1. Read file content\n"
-        "2. Write to file\n"
-        "3. Monitor updates\n"
-        "4. Replace file content\n"
-        "5. Delete file content\n");
-    bzero(buffer, 1024);
-    fgets(buffer, 1023, stdin);
-    switch (buffer[0]) {
-        case '1':
-            // read file content
-            message[0] = '1';
-            message[1] = ' ';
-            printf(
-                "You have selected option 1, please specify the <pathname> "
-                "<offset> <number of bytes to read from the file>\n"
-                "Please note that each entry is separated by a space\n");
-            bzero(buffer, 1024);
-            fgets(buffer, 1023, stdin);
-            for (int i = 0; i < strlen(buffer); i++) {
-                message[i + 2] = buffer[i];
+
+    // keep accepting requests from the user
+    while (1) {
+        printf(
+            "What would you like to do?\n"
+            "1. Read file content\n"
+            "2. Write to file\n"
+            "3. Monitor updates\n"
+            "4. Replace file content\n"
+            "5. Delete file content\n"
+            "6. End the program\n");
+        bzero(buffer, 1024);
+        fgets(buffer, 1023, stdin);  // ignore newline char
+        switch (buffer[0]) {
+            case '1': {
+                ReadRequest req;
+                std::vector<uint8_t> marshalledReq;
+
+                handleReadRequest(&req);
+                printf("Marshalling request...\n");
+                marshalledReq = marshalReadRequest(req);
+
+                printf("Sending read request to server...\n");
+                n = sendto(sock, &marshalledReq, sizeof(marshalledReq), 0,
+                           (const struct sockaddr *)&server, length);
+                if (n < 0) error("Sendto");
+                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
+                             &length);
+                if (n < 0) error("recvfrom");
+                write(1, "Got an ack: ", 12);
+                write(1, buffer, n);
+
+                break;
             }
-            break;
-        case '2':
-            // write to file
-            message[0] = '2';
-            message[1] = ' ';
-            printf(
-                "You have selected option 2, please specify the <pathname> "
-                "<offset> <number of bytes to read from the file>\n"
-                "Please note that each entry is separated by a space\n");
-            bzero(buffer, 1024);
-            fgets(buffer, 1023, stdin);
-            for (int i = 0; i < strlen(buffer); i++) {
-                message[i + 2] = buffer[i];
+            case '2':{
+                WriteRequest req;
+                std::vector<uint8_t> marshalledReq;
+
+                handleWriteRequest(&req);
+                printf("Marshalling request...\n");
+                marshalledReq = marshalWriteRequest(req);
+
+                printf("Sending read request to server...\n");
+                n = sendto(sock, &marshalledReq, sizeof(marshalledReq), 0,
+                           (const struct sockaddr *)&server, length);
+                if (n < 0) error("Sendto");
+                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
+                             &length);
+                if (n < 0) error("recvfrom");
+                write(1, "Got an ack: ", 12);
+                write(1, buffer, n);
+
+                break;
             }
-            break;
-        case '3':
-            // monitor updates
-            printf("You have selected option 3");
-            break;
-        case '4':
-            // monitor updates
-            printf("You have selected option 3");
-            break;
-        case '5':
-            // monitor updates
-            printf("You have selected option 3");
-            break;
+            case '3':{
+                printf("You have selected option 3");
+                break;
+            }
+            case '4':{
+                printf("You have selected option 4");
+                break;
+            }
+            case '5': {
+                printf("You have selected option 5");
+                break;
+            }
+            case '6':
+                printf("Terminating program\n");
+                close(sock);
+                return 0;
+            default:
+                error("you have entered an invalid option");
+        }
     }
-    n = sendto(sock, message, strlen(message), 0,
-               (const struct sockaddr *)&server, length);
-    if (n < 0) error("Sendto");
-    n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from, &length);
-    if (n < 0) error("recvfrom");
-    write(1, "Got an ack: ", 12);
-    write(1, buffer, n);
     close(sock);
     return 0;
 }
