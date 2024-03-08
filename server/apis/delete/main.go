@@ -1,9 +1,14 @@
 package delete
 
-import "github.com/cz4013/server/apis/delete/messages"
+import (
+	"fmt"
+	"net"
+
+	"github.com/cz4013/server/apis/delete/messages"
+)
 
 // Main entrypoint
-func Handler(fileStorePath string, data []byte) []byte {
+func Handler(fileStorePath string, clientAddr *net.UDPAddr, data []byte) []byte {
 	req, err := messages.UnmarshalRequest(data)
 	if err != nil {
 		return messages.MarshalResponse(messages.DeleteResponse{
@@ -11,6 +16,8 @@ func Handler(fileStorePath string, data []byte) []byte {
 			ErrorMessage: err.Error(),
 		})
 	}
+
+	fmt.Printf("Received request from client %s: %+v", clientAddr, req)
 
 	// TODO
 	_ = req

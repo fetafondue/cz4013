@@ -1,75 +1,95 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
+	"net"
 	"os"
 
 	"github.com/cz4013/server/apis"
-	"github.com/cz4013/server/apis/delete"
-	"github.com/cz4013/server/apis/read"
-	"github.com/cz4013/server/apis/replace"
-	"github.com/cz4013/server/apis/subscribe"
-	"github.com/cz4013/server/apis/write"
 	"github.com/cz4013/server/common"
 )
 
-func getFullFileStorePath(currentDir string) string {
-	return currentDir + common.FilesDir
+// parse command-line arguments flags
+func parseFlags() (port *string) {
+	// define flags
+	port = flag.String("port", "8080", "Port for server to listen on")
+	// b := flag.String("b", "", "Description")
+
+	flag.Parse()
+
+	return port
 }
 
-func validateRequest(req []byte) error {
-	// request should at least contain MessageType
-	if len(req) < common.MessageTypeLength {
-		return fmt.Errorf("invalid request: byte array length is too short")
-	}
-	return nil
-}
-
-func getMessageType(req []byte) apis.MessageType {
-	// extract MessageType
-	return apis.MessageType(req[0])
-}
-
-func routeRequest(fileStorePath string, udp_request []byte) []byte {
-	err := validateRequest(udp_request)
+func getFullFileStorePath() (string, error) {
+	currentDir, err := os.Getwd()
 	if err != nil {
-		return []byte(err.Error())
+		return "", fmt.Errorf("unable to get working directory")
 	}
 
-	// get request message type
-	messageType := getMessageType(udp_request)
-	req_data := udp_request[1:]
+	return currentDir + common.FilesDir, nil
+}
 
-	// route request to the corresponding server method based on message type
-	switch messageType {
-	case apis.READ:
-		return read.Handler(fileStorePath, req_data)
-	case apis.WRITE:
-		return write.Handler(fileStorePath, req_data)
-	case apis.SUBSCRIBE:
-		return subscribe.Handler(fileStorePath, req_data)
-	case apis.REPLACE:
-		return replace.Handler(fileStorePath, req_data)
-	case apis.DELETE:
-		return delete.Handler(fileStorePath, req_data)
-	default:
-		return []byte("invalid request: not a supported message type")
+func startUdpServer(port *string) (*net.UDPConn, error) {
+	addr := fmt.Sprintf(":%s", *port)
+	udpAddr, err := net.ResolveUDPAddr("udp", addr)
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
+}
+
+func handlePacket(conn *net.UDPConn, fileStorePath string) {
+	// buffer to hold incoming data
+	buffer := make([]byte, 1024)
+
+	// read data from client
+	n, addr, err := conn.ReadFromUDP(buffer)
+	if err != nil {
+		fmt.Println("Error reading data:", err)
+		return
+	}
+
+	// process data
+	data := buffer[:n]
+	response := apis.RouteRequest(fileStorePath, addr, data)
+
+	// respond to client
+	_, err = conn.WriteToUDP(response, addr)
+	if err != nil {
+		fmt.Println("Error sending response:", err)
+		return
 	}
 }
 
 func main() {
-	// get file store path of server
-	currentDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error: Unable to get working directory, quitting.")
-		return
-	}
-	// the absolute path to the server's file store directory
-	fileStorePath := getFullFileStorePath(currentDir)
-	fmt.Println("Started server with file directory: fileStorePath, ")
+	port := parseFlags()
 
-	// TODO: delete this for a udp listener that calls routeRequest
-	data := []byte("\x02\x00\x00\x00\x08\x66\x69\x6c\x65\x2e\x74\x78\x74\x00\x00\x00\x01\x00\x00\x00\x03\x65\x65\x65")
-	res := routeRequest(fileStorePath, data)
-	fmt.Println(res)
+	// the absolute path to the server's file store directory
+	fileStorePath, err := getFullFileStorePath()
+	if err != nil {
+		log.Fatal("Unable to obtain server's file store path:", err)
+	}
+
+	conn, err := startUdpServer(port)
+	if err != nil {
+		log.Fatal("Unable to start UDP server:", err)
+	}
+	defer conn.Close()
+
+	fmt.Println("Started UDP server.\n",
+		"File directory:", fileStorePath, "\n",
+		"Listening on:", conn.LocalAddr(), "(use ifconfig/ipconfig to get the IP address)")
+
+	// continuously handle incoming messages
+	for {
+		handlePacket(conn, fileStorePath)
+	}
 }

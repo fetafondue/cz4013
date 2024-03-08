@@ -1,10 +1,13 @@
 # cz4013
 
-## Installation
+## Setup
 
 ### Server
 1. Install Go
-2. TODO
+2. Go to server directory `cd server`
+3. Add files as desired under /disk
+3. Run `go run main.go`
+4. Use `ifconfig` | `ipconfig` to find the IP address of the server
 
 ### Client
 1. Install GCC
