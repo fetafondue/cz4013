@@ -9,7 +9,10 @@ import (
 
 	"github.com/cz4013/server/apis"
 	"github.com/cz4013/server/common"
+	"github.com/cz4013/server/network"
 )
+
+var Conn *net.UDPConn // global variable representing the server's UDP connection
 
 // parse command-line arguments flags
 func parseFlags() (port *string) {
@@ -31,38 +34,18 @@ func getFullFileStorePath() (string, error) {
 	return currentDir + common.FilesDir, nil
 }
 
-func startUdpServer(port *string) (*net.UDPConn, error) {
-	addr := fmt.Sprintf(":%s", *port)
-	udpAddr, err := net.ResolveUDPAddr("udp", addr)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := net.ListenUDP("udp", udpAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, nil
-}
-
-func handlePacket(conn *net.UDPConn, fileStorePath string) {
-	// buffer to hold incoming data
-	buffer := make([]byte, 1024)
-
-	// read data from client
-	n, addr, err := conn.ReadFromUDP(buffer)
+func handlePacket(fileStorePath string) {
+	// read to client
+	data, clientAddress, err := network.ReadFromClient()
 	if err != nil {
 		log.Println("Error reading data:", err)
 		return
 	}
-
-	// process data
-	data := buffer[:n]
-	response := apis.RouteRequest(fileStorePath, addr, data)
+	// process request
+	response := apis.RouteRequest(fileStorePath, clientAddress, data)
 
 	// respond to client
-	_, err = conn.WriteToUDP(response, addr)
+	err = network.SendToClient(clientAddress, response)
 	if err != nil {
 		log.Println("Error sending response:", err)
 		return
@@ -78,7 +61,7 @@ func main() {
 		log.Fatal("Unable to obtain server's file store path:", err)
 	}
 
-	conn, err := startUdpServer(port)
+	conn, err := network.StartUdpServer(port)
 	if err != nil {
 		log.Fatal("Unable to start UDP server:", err)
 	}
@@ -90,6 +73,6 @@ func main() {
 
 	// continuously handle incoming messages
 	for {
-		handlePacket(conn, fileStorePath)
+		handlePacket(fileStorePath)
 	}
 }

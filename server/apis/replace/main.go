@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/cz4013/server/apis/replace/messages"
+	"github.com/cz4013/server/apis/replace/service"
 )
 
 // Main entrypoint
@@ -19,9 +20,7 @@ func Handler(fileStorePath string, clientAddr *net.UDPAddr, data []byte) []byte 
 
 	log.Printf("Received request from client %s: %+v\n", clientAddr, req)
 
-	// TODO process request
-	_ = req
-	res := messages.ReplaceResponse{}
+	res := service.Replace(fileStorePath, req)
 
 	log.Printf("Response to send to client %s: %+v\n", clientAddr, res)
 
