@@ -8,13 +8,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <chrono>
 #include <iostream>
+#include <unordered_map>
 
-#include "messages/read.h"
-#include "messages/write.h"
-#include "messages/subscribe.h"
-#include "messages/replace.h"
+#include "cache/cache.h"
 #include "messages/delete.h"
+#include "messages/read.h"
+#include "messages/replace.h"
+#include "messages/subscribe.h"
+#include "messages/write.h"
 
 void error(const char *msg);
 
@@ -25,10 +28,13 @@ int main(int argc, char *argv[]) {
     struct hostent *hp;
     char buffer[1024];
 
-    if (argc != 3) {
-        printf("Usage: server port\n");
+    if (argc != 4) {
+        printf("Missing arguments\n");
         exit(1);
     }
+
+    fInterval = atoi(argv[3]);
+
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) error("socket");
 
@@ -61,6 +67,9 @@ int main(int argc, char *argv[]) {
                 printf("Marshalling request...\n");
                 marshalledReq = marshalReadRequest(req);
 
+                // TODO: add cache logic here (checking for time, then cache
+                // read or continue down then cache write)
+
                 printf("Sending read request to server...\n");
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
@@ -74,7 +83,7 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
-            case '2':{
+            case '2': {
                 WriteRequest req;
                 std::vector<uint8_t> marshalledReq;
 
@@ -95,7 +104,7 @@ int main(int argc, char *argv[]) {
 
                 break;
             }
-            case '3':{
+            case '3': {
                 SubscribeRequest req;
                 std::vector<uint8_t> marshalledReq;
 
@@ -113,13 +122,16 @@ int main(int argc, char *argv[]) {
                 write(1, "Got an ack: ", 12);
                 write(1, buffer, n);
                 write(1, "\n", n);
-                
-                printf("Subscribe request success, listening to server for %d seconds...\n", req.monitorIntervalSeconds);
+
+                printf(
+                    "Subscribe request success, listening to server for %d "
+                    "seconds...\n",
+                    req.monitorIntervalSeconds);
                 // TODO: whats the best way to listen to the server changes
-                
+
                 break;
             }
-            case '4':{
+            case '4': {
                 ReplaceRequest req;
                 std::vector<uint8_t> marshalledReq;
 
@@ -158,7 +170,7 @@ int main(int argc, char *argv[]) {
                 write(1, "Got an ack: ", 12);
                 write(1, buffer, n);
                 write(1, "\n", n);
-                
+
                 break;
             }
             case '6':
