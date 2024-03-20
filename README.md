@@ -13,4 +13,4 @@
 1. Install GCC
 2. Go to client directory `cd client`
 2. Compile `./compile.sh` (if this does not work, try `chmod +x compile.sh` first)
-3. Run `./client_udp`
+3. Run `./client_udp <ipaddress> <socket>` (server runs on 8080 by default)
