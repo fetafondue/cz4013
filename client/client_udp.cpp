@@ -12,6 +12,9 @@
 
 #include "messages/read.h"
 #include "messages/write.h"
+#include "messages/subscribe.h"
+#include "messages/replace.h"
+#include "messages/delete.h"
 
 void error(const char *msg);
 
@@ -67,6 +70,7 @@ int main(int argc, char *argv[]) {
                 if (n < 0) error("recvfrom");
                 write(1, "Got an ack: ", 12);
                 write(1, buffer, n);
+                write(1, "\n", n);
 
                 break;
             }
@@ -78,7 +82,7 @@ int main(int argc, char *argv[]) {
                 printf("Marshalling request...\n");
                 marshalledReq = marshalWriteRequest(req);
 
-                printf("Sending read request to server...\n");
+                printf("Sending write request to server...\n");
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
@@ -87,19 +91,74 @@ int main(int argc, char *argv[]) {
                 if (n < 0) error("recvfrom");
                 write(1, "Got an ack: ", 12);
                 write(1, buffer, n);
+                write(1, "\n", n);
 
                 break;
             }
             case '3':{
-                printf("You have selected option 3");
+                SubscribeRequest req;
+                std::vector<uint8_t> marshalledReq;
+
+                handleSubscribeRequest(&req);
+                printf("Marshalling request...\n");
+                marshalledReq = marshalSubscribeRequest(req);
+
+                printf("Sending subscribe request to server...\n");
+                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
+                           (const struct sockaddr *)&server, length);
+                if (n < 0) error("Sendto");
+                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
+                             &length);
+                if (n < 0) error("recvfrom");
+                write(1, "Got an ack: ", 12);
+                write(1, buffer, n);
+                write(1, "\n", n);
+                
+                printf("Subscribe request success, listening to server for %d seconds...\n", req.monitorIntervalSeconds);
+                // TODO: whats the best way to listen to the server changes
+                
                 break;
             }
             case '4':{
-                printf("You have selected option 4");
+                ReplaceRequest req;
+                std::vector<uint8_t> marshalledReq;
+
+                handleReplaceRequest(&req);
+                printf("Marshalling request...\n");
+                marshalledReq = marshalReplaceRequest(req);
+
+                printf("Sending replace request to server...\n");
+                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
+                           (const struct sockaddr *)&server, length);
+                if (n < 0) error("Sendto");
+                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
+                             &length);
+                if (n < 0) error("recvfrom");
+                write(1, "Got an ack: ", 12);
+                write(1, buffer, n);
+                write(1, "\n", n);
+
                 break;
             }
             case '5': {
-                printf("You have selected option 5");
+                DeleteRequest req;
+                std::vector<uint8_t> marshalledReq;
+
+                handleDeleteRequest(&req);
+                printf("Marshalling request...\n");
+                marshalledReq = marshalDeleteRequest(req);
+
+                printf("Sending delete request to server...\n");
+                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
+                           (const struct sockaddr *)&server, length);
+                if (n < 0) error("Sendto");
+                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
+                             &length);
+                if (n < 0) error("recvfrom");
+                write(1, "Got an ack: ", 12);
+                write(1, buffer, n);
+                write(1, "\n", n);
+                
                 break;
             }
             case '6':

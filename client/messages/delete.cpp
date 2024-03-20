@@ -76,3 +76,36 @@ DeleteResponse unmarshalDeleteResponse(const std::vector<uint8_t> &res)
 
     return {false, errMsg};
 }
+
+void handleDeleteRequest(DeleteRequest *req) {
+    char buffer[1024];
+    std::string pathname, offset, numBytes;
+
+    printf(
+        "You have selected option 5, please enter the pathname of "
+        "the file\n");
+    bzero(buffer, 1024);
+    fgets(buffer, 1023, stdin);
+    for (int i = 0; i < strlen(buffer); i++) {
+        pathname += buffer[i];
+    }
+    pathname.erase(std::remove_if(pathname.begin(), pathname.end(),::isspace),
+        pathname.end());
+    req->pathname = pathname;
+
+    printf("Please enter the offset\n");
+    bzero(buffer, 1024);
+    fgets(buffer, 1023, stdin);
+    for (int i = 0; i < strlen(buffer); i++) {
+        offset += buffer[i];
+    }
+    req->offset = stoi(offset);
+
+    printf("Please enter the number of bytes to delete from the file\n");
+    bzero(buffer, 1024);
+    fgets(buffer, 1023, stdin);
+    for (int i = 0; i < strlen(buffer); i++) {
+        numBytes += buffer[i];
+    }
+    req->numBytes = stoi(numBytes);
+}

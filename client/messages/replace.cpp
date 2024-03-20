@@ -79,3 +79,39 @@ ReplaceResponse unmarshalReplaceResponse(const std::vector<uint8_t> &res)
 
     return {false, errMsg};
 }
+
+void handleReplaceRequest(ReplaceRequest *req) {
+    char buffer[1024];
+    std::string pathname, offset, content;
+
+    printf(
+        "You have selected option 4, please enter the pathname of "
+        "the file\n");
+    bzero(buffer, 1024);
+    fgets(buffer, 1023, stdin);
+    for (int i = 0; i < strlen(buffer); i++) {
+        pathname += buffer[i];
+    }
+    pathname.erase(std::remove_if(pathname.begin(), pathname.end(), ::isspace),
+                   pathname.end());
+    req->pathname = pathname;
+
+    printf("Please enter the offset\n");
+    bzero(buffer, 1024);
+    fgets(buffer, 1023, stdin);
+    for (int i = 0; i < strlen(buffer); i++) {
+        offset += buffer[i];
+    }
+    req->offset = stoi(offset);
+
+    printf(
+        "Please enter the content that you would like to replace in the file\n");
+    bzero(buffer, 1024);
+    fgets(buffer, 1023, stdin);
+    for (int i = 0; i < strlen(buffer); i++) {
+        content += buffer[i];
+    }
+    content.erase(std::remove_if(content.begin(), content.end(), ::isspace),
+                   content.end());
+    req->content = content;
+}

@@ -18,5 +18,6 @@ struct SubscribeResponse
 
 std::vector<uint8_t> marshalSubscribeRequest(const SubscribeRequest &req);
 SubscribeResponse unmarshalSubscribeResponse(const std::vector<uint8_t> &res);
+void handleSubscribeRequest(SubscribeRequest *req);
 
 #endif
