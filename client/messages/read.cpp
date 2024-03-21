@@ -31,7 +31,7 @@ std::vector<uint8_t> marshalReadRequest(const ReadRequest &req)
 
 bool validateMarshalledReadResponse(const std::vector<uint8_t> &res)
 {
-    // ensure that the byte vector is at least its minimum length (1 bool + 1 uint)
+    // ensure that the byte vector is at least its minimum length (1 bool + 1 uint32)
     if (res.size() < sizeof(bool) + sizeof(uint32_t))
         throw std::invalid_argument("invalid response: byte vector length is too short");
 

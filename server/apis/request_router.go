@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/cz4013/server/apis/delete"
+	getlastmodifiedtime "github.com/cz4013/server/apis/get_last_modified_time"
 	"github.com/cz4013/server/apis/read"
 	"github.com/cz4013/server/apis/replace"
 	"github.com/cz4013/server/apis/subscribe"
@@ -47,6 +48,8 @@ func RouteRequest(fileStorePath string, clientAddr *net.UDPAddr, udp_request []b
 		return replace.Handler(fileStorePath, clientAddr, data)
 	case DELETE:
 		return delete.Handler(fileStorePath, clientAddr, data)
+	case GET_LAST_MODIFIED_TIME:
+		return getlastmodifiedtime.Handler(fileStorePath, clientAddr, data)
 	default:
 		return []byte("invalid request: not a supported message type")
 	}

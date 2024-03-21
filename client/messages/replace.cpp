@@ -58,9 +58,9 @@ bool validateMarshalledReplaceResponse(const std::vector<uint8_t> &res)
     for (size_t i = sizeof(bool); i < sizeof(bool) + sizeof(uint32_t); i++)
         errMsgLen = (errMsgLen << 8) | res[i];
 
-    // Ensure that the byte slice has the correct length if it includes errorMessage
+    // Ensure that the byte vector has the correct length if it includes errorMessage
     if (res.size() != sizeof(bool) + sizeof(uint32_t) + errMsgLen)
-        throw std::invalid_argument("invalid response: incorrect byte array length");
+        throw std::invalid_argument("invalid response: incorrect byte vector length");
 
     return success;
 }

@@ -35,7 +35,7 @@ func getFullFileStorePath() (string, error) {
 }
 
 func handlePacket(fileStorePath string) {
-	// read to client
+	// read from client
 	data, clientAddress, err := network.ReadFromClient()
 	if err != nil {
 		log.Println("Error reading data:", err)

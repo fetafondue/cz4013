@@ -5,11 +5,12 @@
 
 enum MessageType : uint8_t
 {
-    READ = 0b00001,
-    WRITE = 0b00010,
-    SUBSCRIBE = 0b00100,
-    REPLACE = 0b01000,
-    DELETE = 0b10000
+    READ = 0b000001,
+    WRITE = 0b000010,
+    SUBSCRIBE = 0b000100,
+    REPLACE = 0b001000,
+    DELETE = 0b010000,
+    GET_LAST_MODIFIED_TIME = 0b100000
 };
 
 #endif
