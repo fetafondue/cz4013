@@ -18,6 +18,5 @@ struct GetLastModifiedTimeResponse
 
 std::vector<uint8_t> marshalGetLastModifiedTimeRequest(const GetLastModifiedTimeRequest &req);
 GetLastModifiedTimeResponse unmarshalGetLastModifiedTimeResponse(const std::vector<uint8_t> &res);
-void handleGetLastModifiedTimeRequest(GetLastModifiedTimeRequest *req);
 
 #endif

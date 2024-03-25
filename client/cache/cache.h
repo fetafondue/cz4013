@@ -5,17 +5,16 @@
 #include <iostream>
 #include <unordered_map>
 
-// filename : { {tc : tmclient} : filecontent }
+// filename : { {tc : tmclient} : filecontent }, all timestamps are in epoch
+// time in milliseconds
 extern std::unordered_map<
-    std::string,
-    std::pair<std::pair<std::chrono::milliseconds, std::chrono::milliseconds>,
-              std::string> >
+    std::string, std::pair<std::pair<long long, long long>, std::string> >
     cache;
-
-extern int fInterval;
+extern long long fInterval;
 
 void cacheWrite(std::string filename, std::string filecontent,
-                std::chrono::milliseconds tmserver);
+                long long tmserver);
 std::string cacheRead(std::string filename);
+bool isValidCacheEntry(std::string filename);
 
 #endif
