@@ -14,6 +14,7 @@
 
 #include "cache/cache.h"
 #include "messages/delete.h"
+#include "messages/get_last_modified_time.h"
 #include "messages/read.h"
 #include "messages/replace.h"
 #include "messages/subscribe.h"
@@ -27,13 +28,14 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in server, from;
     struct hostent *hp;
     char buffer[1024];
+    std::vector<uint8_t> msg;
 
     if (argc != 4) {
         printf("Missing arguments\n");
         exit(1);
     }
 
-    fInterval = atoi(argv[3]);
+    fInterval = atoi(argv[3]) * 1000;
 
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) error("socket");
@@ -56,35 +58,90 @@ int main(int argc, char *argv[]) {
             "4. Replace file content\n"
             "5. Delete file content\n"
             "6. End the program\n");
+        // clear the vector and assign memory for it
+        msg.clear();
+        msg.resize(5000);
         bzero(buffer, 1024);
         fgets(buffer, 1023, stdin);  // ignore newline char
         switch (buffer[0]) {
             case '1': {
-                ReadRequest req;
+                ReadRequest readReq;
+                ReadResponse readResp;
                 std::vector<uint8_t> marshalledReq;
+                bool fileInCache = false;
 
-                handleReadRequest(&req);
-                printf("Marshalling request...\n");
-                marshalledReq = marshalReadRequest(req);
+                handleReadRequest(&readReq);
+                if (isValidCacheEntry(readReq.pathname)) {
+                    std::cout
+                        << "Valid cache entry, retrieving data from cache..."
+                        << '\n';
+                    std::string data = cacheRead(readReq.pathname);
+                    std::cout << "Data: {" << data << "}" << '\n';
+                } else {
+                    std::cout
+                        << "File data not found in cache, reading file from "
+                           "server"
+                        << '\n';
+                    std::cout << "Marshalling request..." << '\n';
+                    marshalledReq = marshalReadRequest(readReq);
+                    std::cout << "Sending request to server for file "
+                              << readReq.pathname << " ..." << '\n';
+                    n = sendto(sock, marshalledReq.data(), marshalledReq.size(),
+                               0, (const struct sockaddr *)&server, length);
+                    if (n < 0) error("Sendto");
+                    n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                 (struct sockaddr *)&from, &length);
+                    if (n < 0) error("recvfrom");
+                    // resize buffer for message unmarshalling validation
+                    msg.resize(n);
+                    readResp = unmarshalReadResponse(msg);
+                    std::cout << "Got an ack, content is: {" << readResp.content
+                              << '}' << '\n';
 
-                // TODO: add cache logic here (checking for time, then cache
-                // read or continue down then cache write)
+                    // TODO: below, figure out why the response marshalling
+                    // validation is failing
 
-                printf("Sending read request to server...\n");
-                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
-                           (const struct sockaddr *)&server, length);
-                if (n < 0) error("Sendto");
-                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
-                             &length);
-                if (n < 0) error("recvfrom");
-                write(1, "Got an ack: ", 12);
-                write(1, buffer, n);
-                write(1, "\n", n);
+                    // // clear the vector and assign memory for it
+                    // msg.clear();
+                    // msg.resize(5000);
 
+                    // // get last modified time at server
+                    // GetLastModifiedTimeRequest timeReq;
+                    // GetLastModifiedTimeResponse timeResp;
+                    // std::vector<uint8_t> marshalledTimeReq;
+                    // // build request
+                    // timeReq.pathname = readReq.pathname;
+                    // std::cout << "Marshalling last modified time request..."
+                    //           << '\n';
+                    // marshalledTimeReq =
+                    //     marshalGetLastModifiedTimeRequest(timeReq);
+                    // std::cout << "Sending request for last modified time..."
+                    //           << '\n';
+                    // n = sendto(sock, marshalledTimeReq.data(),
+                    //            marshalledTimeReq.size(), 0,
+                    //            (const struct sockaddr *)&server, length);
+                    // if (n < 0) error("Sendto");
+                    // n = recvfrom(sock, msg.data(),
+                    //              msg.capacity(), 0,
+                    //              (struct sockaddr *)&from, &length);
+                    // if (n < 0) error("recvfrom");
+                    // // resize buffer for message unmarshalling validation
+                    // msg.resize(n);
+                    // timeResp =
+                    //     unmarshalGetLastModifiedTimeResponse(msg);
+                    // std::cout << "Got an ack, last modified time at server
+                    // is: {" << timeResp.lastModifiedUnixTime
+                    //           << '}' << '\n';
+                    // std::cout << "Writing to cache..." << '\n';
+                    // cacheWrite(timeReq.pathname, readResp.content,
+                    //            timeResp.lastModifiedUnixTime);
+                    // std::cout << "Successfully cached response" << '\n';
+                }
                 break;
             }
             case '2': {
                 WriteRequest req;
+                WriteResponse resp;
                 std::vector<uint8_t> marshalledReq;
 
                 handleWriteRequest(&req);
@@ -95,17 +152,20 @@ int main(int argc, char *argv[]) {
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
-                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
-                             &length);
+                n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                             (struct sockaddr *)&from, &length);
                 if (n < 0) error("recvfrom");
-                write(1, "Got an ack: ", 12);
-                write(1, buffer, n);
-                write(1, "\n", n);
+                // resize buffer for message unmarshalling validation
+                msg.resize(n);
+                resp = unmarshalWriteResponse(msg);
+                std::cout << "Got an ack, write success is " << std::boolalpha
+                          << resp.success << '\n';
 
                 break;
             }
             case '3': {
                 SubscribeRequest req;
+                SubscribeResponse resp;
                 std::vector<uint8_t> marshalledReq;
 
                 handleSubscribeRequest(&req);
@@ -116,12 +176,14 @@ int main(int argc, char *argv[]) {
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
-                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
-                             &length);
+                n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                             (struct sockaddr *)&from, &length);
                 if (n < 0) error("recvfrom");
-                write(1, "Got an ack: ", 12);
-                write(1, buffer, n);
-                write(1, "\n", n);
+                // resize buffer for message unmarshalling validation
+                msg.resize(n);
+                resp = unmarshalSubscribeResponse(msg);
+                std::cout << "Got an ack, subscribe success is " << std::boolalpha
+                          << resp.success << '\n';
 
                 printf(
                     "Subscribe request success, listening to server for %d "
@@ -133,6 +195,7 @@ int main(int argc, char *argv[]) {
             }
             case '4': {
                 ReplaceRequest req;
+                ReplaceResponse resp;
                 std::vector<uint8_t> marshalledReq;
 
                 handleReplaceRequest(&req);
@@ -143,17 +206,20 @@ int main(int argc, char *argv[]) {
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
-                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
-                             &length);
+                n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                             (struct sockaddr *)&from, &length);
                 if (n < 0) error("recvfrom");
-                write(1, "Got an ack: ", 12);
-                write(1, buffer, n);
-                write(1, "\n", n);
+                // resize buffer for message unmarshalling validation
+                msg.resize(n);
+                resp = unmarshalReplaceResponse(msg);
+                std::cout << "Got an ack, replace success is " << std::boolalpha
+                          << resp.success << '\n';
 
                 break;
             }
             case '5': {
                 DeleteRequest req;
+                DeleteResponse resp;
                 std::vector<uint8_t> marshalledReq;
 
                 handleDeleteRequest(&req);
@@ -164,12 +230,14 @@ int main(int argc, char *argv[]) {
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
-                n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
-                             &length);
+                n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                             (struct sockaddr *)&from, &length);
                 if (n < 0) error("recvfrom");
-                write(1, "Got an ack: ", 12);
-                write(1, buffer, n);
-                write(1, "\n", n);
+                // resize buffer for message unmarshalling validation
+                msg.resize(n);
+                resp = unmarshalDeleteResponse(msg);
+                std::cout << "Got an ack, delete success is " << std::boolalpha
+                          << resp.success << '\n';
 
                 break;
             }
