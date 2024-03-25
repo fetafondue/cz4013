@@ -8,9 +8,9 @@ import (
 
 // GetLastModifiedTimeResponse represents a server response message for the GetLastModifiedTime method
 type GetLastModifiedTimeResponse struct {
-	Success          bool
+	Success              bool
 	LastModifiedUnixTime int64
-	ErrorMessage     string
+	ErrorMessage         string
 }
 
 // MarshalSuccessResponse marshals a successful GetLastModifiedTimeResponse struct into a byte slice
@@ -21,7 +21,7 @@ func marshalSuccessResponse(lastModifiedUnixTime int64) []byte {
 	// insert Success
 	buf[0] = 1 // success flag
 	// insert LastModifiedUnixTime
-	binary.BigEndian.PutUint64(buf[common.BoolByteLength:], uint64(lastModifiedUnixTime))
+	binary.BigEndian.PutUint64(buf[common.BoolByteLength:common.BoolByteLength+common.Uint64ByteLength], uint64(lastModifiedUnixTime))
 
 	return buf
 }
@@ -43,7 +43,7 @@ func marshalErrorResponse(errMsg string) []byte {
 	return buf
 }
 
-// MarshalResponse marshals a ReadResponse struct into a byte slice
+// MarshalResponse marshals a GetLastModifiedTimeResponse struct into a byte slice
 func MarshalResponse(res GetLastModifiedTimeResponse) []byte {
 	if res.Success {
 		return marshalSuccessResponse(res.LastModifiedUnixTime)

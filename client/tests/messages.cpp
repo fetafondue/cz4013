@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "../messages/delete.h"
+#include "../messages/get_last_modified_time.h"
 #include "../messages/read.h"
 #include "../messages/replace.h"
 #include "../messages/subscribe.h"
@@ -16,6 +17,20 @@ void deleteMessageRequestTest() {
     std::vector<uint8_t> marshalledReq = marshalDeleteRequest(req);
     std::cout << "Delete test marshalled request: ";
     for (uint8_t b : marshalledReq) printf("\\x%.2x", b);
+    std::cout << std::endl;
+    // paste the printed value into server side test and see if the req
+    // unmarshals to the original one
+}
+
+void getlastmodtimeMessageRequestTest()
+{
+    GetLastModifiedTimeRequest req;
+    req.pathname = "file.txt";
+
+    std::vector<uint8_t> marshalledReq = marshalGetLastModifiedTimeRequest(req);
+    std::cout << "Get_last_mod_time test marshalled request: ";
+    for (uint8_t b : marshalledReq)
+        printf("\\x%.2x", b);
     std::cout << std::endl;
     // paste the printed value into server side test and see if the req
     // unmarshals to the original one
@@ -91,13 +106,39 @@ void deleteMessageResponseTest() {
     // server side
 }
 
+void getlastmodtimeMessageResponseTest()
+{
+    std::vector<uint8_t> marshalledResponse;
+    // paste in the (marshalled) byte values from server side test
+    uint8_t byteValues[] = {0, 0, 0, 0, 18, 116, 104, 105, 115, 32, 105, 115, 32, 97, 110, 32, 101, 114, 114, 111, 114, 33, 33};
+    for (uint8_t b : byteValues)
+        marshalledResponse.push_back(b);
+    GetLastModifiedTimeResponse res = unmarshalGetLastModifiedTimeResponse(marshalledResponse);
+
+    // format unix time to datetime
+    std::time_t unix_time = res.lastModifiedUnixTime;
+    std::tm *ptm = std::gmtime(&unix_time);
+    char buffer[32];
+    std::strftime(buffer, 32, "%Y-%m-%d %H:%M:%S", ptm);
+
+    std::cout << "Getlastmodtime test unmarshalled response: " << res.success << "\n"
+              << "UnixTime:" << res.lastModifiedUnixTime << "\n"
+              << "DateTime: " << buffer << "\n"
+              << res.errorMessage << std::endl;
+
+    // check if the printed response values are the same as the original on
+    // server side
+}
+
 int main() {
     deleteMessageRequestTest();
+    getlastmodtimeMessageRequestTest();
     readMessageRequestTest();
     writeMessageRequestTest();
     replaceMessageRequestTest();
     subscribeMessageRequestTest();
     deleteMessageResponseTest();
+    getlastmodtimeMessageResponseTest();
 
     return 0;
 }
