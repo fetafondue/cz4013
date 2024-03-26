@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 
@@ -14,8 +15,8 @@ import (
 )
 
 func validateRequest(req []byte) error {
-	// request should at least contain MessageType
-	if len(req) < common.MessageTypeLength {
+	// request should at least contain MessageType & message ID (uint32)
+	if len(req) < common.MessageTypeLength + common.Uint32ByteLength {
 		return fmt.Errorf("invalid request: byte array length is too short")
 	}
 	return nil
@@ -26,15 +27,20 @@ func getMessageType(req []byte) MessageType {
 	return MessageType(req[0])
 }
 
+func getMessageId(req []byte) uint32 {
+	return binary.BigEndian.Uint32(req[common.MessageTypeLength:common.MessageTypeLength+common.Uint32ByteLength])
+}
+
 func RouteRequest(fileStorePath string, clientAddr *net.UDPAddr, udp_request []byte) []byte {
 	err := validateRequest(udp_request)
 	if err != nil {
 		return []byte(err.Error())
 	}
 
-	// get request message type & data
+	// get request message type, message ID & data
 	messageType := getMessageType(udp_request)
-	data := udp_request[1:]
+	messageID := getMessageId(udp_request) //todo
+	data := udp_request[common.MessageTypeLength+common.Uint32ByteLength:]
 
 	// route request to the corresponding server method based on message type
 	switch messageType {
