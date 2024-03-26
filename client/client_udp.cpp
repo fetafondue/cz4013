@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
                     std::cout << "Marshalling last modified time request..."
                               << '\n';
                     marshalledTimeReq =
-                        marshalGetLastModifiedTimeRequest(++id, timeReq);
+                        marshalGetLastModifiedTimeRequest(id, timeReq); id++;
                     while (true) {
                         // retry if packet loss
                         try {
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
                     msg.resize(5000);
 
                     std::cout << "Marshalling read request..." << '\n';
-                    marshalledReq = marshalReadRequest(id++, readReq);
+                    marshalledReq = marshalReadRequest(id, readReq); id++;
                     while (true) {
                         // retry if packet loss
                         try {
@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
                     std::cout << "Marshalling last modified time request..."
                               << '\n';
                     marshalledTimeReq =
-                        marshalGetLastModifiedTimeRequest(id++, timeReq);
+                        marshalGetLastModifiedTimeRequest(id, timeReq); id++;
                     while (true) {
                         // retry if packet loss
                         try {
@@ -219,7 +219,7 @@ int main(int argc, char *argv[]) {
                         msg.resize(5000);
 
                         std::cout << "Marshalling read request..." << '\n';
-                        marshalledReq = marshalReadRequest(id++, readReq);
+                        marshalledReq = marshalReadRequest(id, readReq); id++;
                         while (true) {
                             // retry if packet loss
                             try {
@@ -293,7 +293,7 @@ int main(int argc, char *argv[]) {
 
                 prepareWriteRequest(&req);
                 std::cout << "Marshalling write request..." << '\n';
-                marshalledReq = marshalWriteRequest(id++, req);
+                marshalledReq = marshalWriteRequest(id, req); id++;
 
                 while (true) {
                     // retry if packet loss
@@ -330,7 +330,7 @@ int main(int argc, char *argv[]) {
 
                 prepareSubscribeRequest(&req);
                 std::cout << "Marshalling subscribe request..." << '\n';
-                marshalledReq = marshalSubscribeRequest(id++, req);
+                marshalledReq = marshalSubscribeRequest(id, req); id++;
 
                 while (true) {
                     // retry if packet loss
@@ -394,7 +394,7 @@ int main(int argc, char *argv[]) {
 
                 prepareReplaceRequest(&req);
                 std::cout << "Marshalling replace request..." << '\n';
-                marshalledReq = marshalReplaceRequest(id++, req);
+                marshalledReq = marshalReplaceRequest(id, req); id++;
 
                 while (true) {
                     // retry if packet loss
@@ -431,7 +431,7 @@ int main(int argc, char *argv[]) {
 
                 prepareDeleteRequest(&req);
                 std::cout << "Marshalling delete request..." << '\n';
-                marshalledReq = marshalDeleteRequest(id++, req);
+                marshalledReq = marshalDeleteRequest(id, req); id++;
 
                 while (true) {
                     // retry if packet loss
