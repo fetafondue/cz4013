@@ -4,8 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
+	"time"
 
 	"github.com/cz4013/server/apis"
 	"github.com/cz4013/server/common"
@@ -13,7 +15,7 @@ import (
 )
 
 var Conn *net.UDPConn // global variable representing the server's UDP connection
-
+var AtLeastOnce = false
 // parse command-line arguments flags
 func parseFlags() (port *string) {
 	// define flags
@@ -35,6 +37,19 @@ func getFullFileStorePath() (string, error) {
 }
 
 func handlePacket(fileStorePath string) {
+	// Randomly decide what to do with the client's request
+	rand.Seed(time.Now().UnixNano())
+	randomChoice := rand.Intn(10) // Generate a random number between 0 and 9
+	if randomChoice < 3 { // 30% chance of loss of request
+		log.Println("Simulating loss of request message")
+		time.Sleep(2*time.Minute)
+		return
+	} else if randomChoice < 6 { // Additional 30% chance to loss of reply 
+		log.Println("Simulating loss of reply message")
+		time.Sleep(2*time.Minute)
+		return
+	}
+	// Remaining 40% chance to proceed as usual
 	// read from client
 	data, clientAddress, err := network.ReadFromClient()
 	if err != nil {
