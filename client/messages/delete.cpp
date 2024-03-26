@@ -12,15 +12,16 @@ std::vector<uint8_t> marshalDeleteRequest(const uint32_t &reqID, const DeleteReq
                                        req.pathname.end());
     uint32_t pathnameLen = pathnameBytes.size();
 
-    // buffer consists of: MessageType (byte), pathnameLen (uint32), pathname
+    // buffer consists of: MessageType (byte), MessageID (uint32), pathnameLen (uint32), pathname
     // (str), offset (uint32), numBytes (uint32)
-    size_t bufSize = sizeof(MessageType) + pathnameLen + 3 * sizeof(uint32_t);
+    size_t bufSize = sizeof(MessageType) + pathnameLen + 4 * sizeof(uint32_t);
     std::vector<uint8_t> buf(bufSize);
 
     // insert MessageType into buf
     buf[0] = DELETE;
     // insert message ID into buf
-    std::memcpy(buf.data() + sizeof(MessageType), &reqID, sizeof(uint32_t));
+    uint32_t reqIdBE = htonl(reqID); // big endian format
+    std::memcpy(buf.data() + sizeof(MessageType), &reqIdBE, sizeof(uint32_t));
 
     // insert pathname length and itself into buf
     uint32_t pathnameLenBE = htonl(pathnameLen); // big endian format

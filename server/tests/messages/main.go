@@ -1,14 +1,23 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"time"
 
 	"github.com/cz4013/server/apis"
+	"github.com/cz4013/server/common"
 
 	"github.com/cz4013/server/apis/delete/messages"
 	getlastmodtime "github.com/cz4013/server/apis/get_last_modified_time/messages"
 )
+
+func getMessageType(req []byte) apis.MessageType {
+	return apis.MessageType(req[0])
+}
+func getMessageId(req []byte) uint32 {
+	return binary.BigEndian.Uint32(req[common.MessageTypeLength : common.MessageTypeLength+common.Uint32ByteLength])
+}
 
 // example
 func deleteMessageRequestTest() {
@@ -26,13 +35,15 @@ func deleteMessageRequestTest() {
 // example
 func getlastmodtimeMessageRequestTest() {
 	// paste marshalled request from client test here (no need to remove first byte)
-	bytes := []byte("\x20\x00\x00\x00\x08\x66\x69\x6c\x65\x2e\x74\x78\x74")
+	bytes := []byte("\x20\x00\x00\x00\x02\x00\x00\x00\x08\x66\x69\x6c\x65\x2e\x74\x78\x74")
 
 	// get message type
-	messageType := apis.MessageType(bytes[0])
-	data := bytes[1:]
+	messageType := getMessageType(bytes)
+	messageID := getMessageId(bytes)
+	data := bytes[common.MessageTypeLength+common.Uint32ByteLength:]
 
 	fmt.Println("Message type: ", messageType)
+	fmt.Println("Message ID: ", messageID)
 
 	unmarshalled, err := getlastmodtime.UnmarshalRequest(data)
 	if err != nil {
@@ -56,9 +67,9 @@ func deleteMessageResponseTest() {
 
 func getlastmodtimeResponseTest() {
 	res := getlastmodtime.GetLastModifiedTimeResponse{
-		Success:      false,
+		Success:              false,
 		LastModifiedUnixTime: time.Now().Unix(),
-		ErrorMessage: "this is an error!!",
+		ErrorMessage:         "this is an error!!",
 	}
 	marshalled := getlastmodtime.MarshalResponse(res)
 	fmt.Println("marshalled response: ", marshalled)
@@ -66,5 +77,5 @@ func getlastmodtimeResponseTest() {
 }
 
 func main() {
-	getlastmodtimeResponseTest()
+	getlastmodtimeMessageRequestTest()
 }

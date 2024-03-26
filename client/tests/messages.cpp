@@ -27,7 +27,7 @@ void getlastmodtimeMessageRequestTest()
     GetLastModifiedTimeRequest req;
     req.pathname = "file.txt";
 
-    std::vector<uint8_t> marshalledReq = marshalGetLastModifiedTimeRequest(1, req);
+    std::vector<uint8_t> marshalledReq = marshalGetLastModifiedTimeRequest(2, req);
     std::cout << "Get_last_mod_time test marshalled request: ";
     for (uint8_t b : marshalledReq)
         printf("\\x%.2x", b);
@@ -42,7 +42,7 @@ void readMessageRequestTest() {
     req.offset = 1;
     req.numBytes = 2;
 
-    std::vector<uint8_t> marshalledReq = marshalReadRequest(1, req);
+    std::vector<uint8_t> marshalledReq = marshalReadRequest(3, req);
     std::cout << "Read test marshalled request: ";
     for (uint8_t b : marshalledReq) printf("\\x%.2x", b);
     std::cout << std::endl;
@@ -56,7 +56,7 @@ void writeMessageRequestTest() {
     req.offset = 1;
     req.content = "eee";
 
-    std::vector<uint8_t> marshalledReq = marshalWriteRequest(1, req);
+    std::vector<uint8_t> marshalledReq = marshalWriteRequest(4, req);
     std::cout << "Write test marshalled request: ";
     for (uint8_t b : marshalledReq) printf("\\x%.2x", b);
     std::cout << std::endl;
@@ -70,7 +70,7 @@ void replaceMessageRequestTest() {
     req.offset = 1;
     req.content = "eee";
 
-    std::vector<uint8_t> marshalledReq = marshalReplaceRequest(1, req);
+    std::vector<uint8_t> marshalledReq = marshalReplaceRequest(5, req);
     std::cout << "Replace test marshalled request: ";
     for (uint8_t b : marshalledReq) printf("\\x%.2x", b);
     std::cout << std::endl;
@@ -83,7 +83,7 @@ void subscribeMessageRequestTest() {
     req.pathname = "file.txt";
     req.monitorIntervalSeconds = 1;
 
-    std::vector<uint8_t> marshalledReq = marshalSubscribeRequest(1, req);
+    std::vector<uint8_t> marshalledReq = marshalSubscribeRequest(6, req);
     std::cout << "Replace test marshalled request: ";
     for (uint8_t b : marshalledReq) printf("\\x%.2x", b);
     std::cout << std::endl;
