@@ -15,7 +15,7 @@ import (
 )
 
 var messageResponses = make(map[uint32][]byte) // global map to store message IDs and their responses
-var atLeastOnce = false
+var atLeastOnce = true
 
 func validateRequest(req []byte) error {
 	// request should at least contain MessageType & message ID (uint32)
