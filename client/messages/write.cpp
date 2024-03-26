@@ -6,7 +6,7 @@
 #include "message_type.h"
 
 // Marshals a WRITE request into a byte vector
-std::vector<uint8_t> marshalWriteRequest(const uint32_t &reqID, WriteRequest &req)
+std::vector<uint8_t> marshalWriteRequest(const uint32_t &reqID, const WriteRequest &req)
 {
     std::vector<uint8_t> pathnameBytes(req.pathname.begin(),
                                        req.pathname.end());

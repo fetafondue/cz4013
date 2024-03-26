@@ -16,7 +16,7 @@ struct GetLastModifiedTimeResponse
     std::string errorMessage;
 };
 
-std::vector<uint8_t> marshalGetLastModifiedTimeRequest(const GetLastModifiedTimeRequest &req);
+std::vector<uint8_t> marshalGetLastModifiedTimeRequest(const uint32_t &reqID, const GetLastModifiedTimeRequest &req);
 GetLastModifiedTimeResponse unmarshalGetLastModifiedTimeResponse(const std::vector<uint8_t> &res);
 
 #endif

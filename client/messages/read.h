@@ -16,7 +16,7 @@ struct ReadResponse {
     std::string errorMessage;
 };
 
-std::vector<uint8_t> marshalReadRequest(const ReadRequest &req);
+std::vector<uint8_t> marshalReadRequest(const uint32_t &reqID, const ReadRequest &req);
 ReadResponse unmarshalReadResponse(const std::vector<uint8_t> &res);
 void prepareReadRequest(ReadRequest *req);
 

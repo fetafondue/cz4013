@@ -15,7 +15,8 @@ struct WriteResponse {
     std::string errorMessage;
 };
 
-std::vector<uint8_t> marshalWriteRequest(const WriteRequest &req);
+std::vector<uint8_t> marshalWriteRequest(const uint32_t &reqID,
+                                         const WriteRequest &req);
 WriteResponse unmarshalWriteResponse(const std::vector<uint8_t> &res);
 void prepareWriteRequest(WriteRequest *req);
 

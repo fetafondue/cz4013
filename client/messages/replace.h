@@ -17,7 +17,7 @@ struct ReplaceResponse
     std::string errorMessage;
 };
 
-std::vector<uint8_t> marshalReplaceRequest(const ReplaceRequest &req);
+std::vector<uint8_t> marshalReplaceRequest(const uint32_t &reqID, const ReplaceRequest &req);
 ReplaceResponse unmarshalReplaceResponse(const std::vector<uint8_t> &res);
 void prepareReplaceRequest(ReplaceRequest *req);
 

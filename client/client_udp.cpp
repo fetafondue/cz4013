@@ -14,12 +14,12 @@
 
 #include "cache/cache.h"
 #include "messages/delete.h"
+#include "messages/error.h"
 #include "messages/get_last_modified_time.h"
 #include "messages/read.h"
 #include "messages/replace.h"
 #include "messages/subscribe.h"
 #include "messages/write.h"
-#include "messages/error.h"
 
 int main(int argc, char *argv[]) {
     int sock, n;
@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
     char buffer[1024];
     std::vector<uint8_t> msg;
     struct timeval tv;
+    uint32_t id = 0;
 
     if (argc != 4) {
         std::cout << "Missing arguments" << '\n';
@@ -89,16 +90,27 @@ int main(int argc, char *argv[]) {
                     std::cout << "Marshalling last modified time request..."
                               << '\n';
                     marshalledTimeReq =
-                        marshalGetLastModifiedTimeRequest(timeReq);
+                        marshalGetLastModifiedTimeRequest(++id, timeReq);
                     std::cout << "Sending request for last modified time..."
                               << '\n';
-                    n = sendto(sock, marshalledTimeReq.data(),
-                               marshalledTimeReq.size(), 0,
-                               (const struct sockaddr *)&server, length);
-                    if (n < 0) error("Sendto");
-                    n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                                 (struct sockaddr *)&from, &length);
-                    if (n < 0) error("recvfrom");
+                    while (true) {
+                        // retry if packet loss
+                        try {
+                            n = sendto(sock, marshalledTimeReq.data(),
+                                       marshalledTimeReq.size(), 0,
+                                       (const struct sockaddr *)&server,
+                                       length);
+                            if (n < 0)
+                                throw std::invalid_argument("Lost packet");
+                            n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                         (struct sockaddr *)&from, &length);
+                            if (n < 0)
+                                throw std::invalid_argument("Lost packet");
+                            break;
+                        } catch (const std::exception &e) {
+                            std::cout << "Request timeout\n";
+                        }
+                    }
                     // resize buffer for message unmarshalling validation
                     msg.resize(n);
                     timeResp = unmarshalGetLastModifiedTimeResponse(msg);
@@ -111,15 +123,27 @@ int main(int argc, char *argv[]) {
                     msg.resize(5000);
 
                     std::cout << "Marshalling read request..." << '\n';
-                    marshalledReq = marshalReadRequest(readReq);
+                    marshalledReq = marshalReadRequest(id++, readReq);
                     std::cout << "Sending read request to server for file {"
                               << readReq.pathname << "} ..." << '\n';
-                    n = sendto(sock, marshalledReq.data(), marshalledReq.size(),
-                               0, (const struct sockaddr *)&server, length);
-                    if (n < 0) error("Sendto");
-                    n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                                 (struct sockaddr *)&from, &length);
-                    if (n < 0) error("recvfrom");
+                    while (true) {
+                        // retry if packet loss
+                        try {
+                            n = sendto(sock, marshalledReq.data(),
+                                       marshalledReq.size(), 0,
+                                       (const struct sockaddr *)&server,
+                                       length);
+                            if (n < 0)
+                                throw std::invalid_argument("Lost packet");
+                            n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                         (struct sockaddr *)&from, &length);
+                            if (n < 0)
+                                throw std::invalid_argument("Lost packet");
+                            break;
+                        } catch (const std::exception &e) {
+                            std::cout << "Request timeout\n";
+                        }
+                    }
                     // resize buffer for message unmarshalling validation
                     msg.resize(n);
                     readResp = unmarshalReadResponse(msg);
@@ -149,16 +173,27 @@ int main(int argc, char *argv[]) {
                     std::cout << "Marshalling last modified time request..."
                               << '\n';
                     marshalledTimeReq =
-                        marshalGetLastModifiedTimeRequest(timeReq);
+                        marshalGetLastModifiedTimeRequest(id++, timeReq);
                     std::cout << "Sending request for last modified time..."
                               << '\n';
-                    n = sendto(sock, marshalledTimeReq.data(),
-                               marshalledTimeReq.size(), 0,
-                               (const struct sockaddr *)&server, length);
-                    if (n < 0) error("Sendto");
-                    n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                                 (struct sockaddr *)&from, &length);
-                    if (n < 0) error("recvfrom");
+                    while (true) {
+                        // retry if packet loss
+                        try {
+                            n = sendto(sock, marshalledTimeReq.data(),
+                                       marshalledTimeReq.size(), 0,
+                                       (const struct sockaddr *)&server,
+                                       length);
+                            if (n < 0)
+                                throw std::invalid_argument("Lost packet");
+                            n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                         (struct sockaddr *)&from, &length);
+                            if (n < 0)
+                                throw std::invalid_argument("Lost packet");
+                            break;
+                        } catch (const std::exception &e) {
+                            std::cout << "Request timeout\n";
+                        }
+                    }
                     // resize buffer for message unmarshalling validation
                     msg.resize(n);
                     timeResp = unmarshalGetLastModifiedTimeResponse(msg);
@@ -174,16 +209,28 @@ int main(int argc, char *argv[]) {
                         msg.resize(5000);
 
                         std::cout << "Marshalling read request..." << '\n';
-                        marshalledReq = marshalReadRequest(readReq);
+                        marshalledReq = marshalReadRequest(id++, readReq);
                         std::cout << "Sending read request to server for file {"
                                   << readReq.pathname << "} ..." << '\n';
-                        n = sendto(sock, marshalledReq.data(),
-                                   marshalledReq.size(), 0,
-                                   (const struct sockaddr *)&server, length);
-                        if (n < 0) error("Sendto");
-                        n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                                     (struct sockaddr *)&from, &length);
-                        if (n < 0) error("recvfrom");
+                        while (true) {
+                            // retry if packet loss
+                            try {
+                                n = sendto(sock, marshalledReq.data(),
+                                           marshalledReq.size(), 0,
+                                           (const struct sockaddr *)&server,
+                                           length);
+                                if (n < 0)
+                                    throw std::invalid_argument("Lost packet");
+                                n = recvfrom(sock, msg.data(), msg.capacity(),
+                                             0, (struct sockaddr *)&from,
+                                             &length);
+                                if (n < 0)
+                                    throw std::invalid_argument("Lost packet");
+                                break;
+                            } catch (const std::exception &e) {
+                                std::cout << "Request timeout\n";
+                            }
+                        }
                         // resize buffer for message unmarshalling validation
                         msg.resize(n);
                         readResp = unmarshalReadResponse(msg);
@@ -234,15 +281,24 @@ int main(int argc, char *argv[]) {
 
                 prepareWriteRequest(&req);
                 std::cout << "Marshalling write request..." << '\n';
-                marshalledReq = marshalWriteRequest(req);
+                marshalledReq = marshalWriteRequest(id++, req);
 
                 std::cout << "Sending write request to server..." << '\n';
-                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
-                           (const struct sockaddr *)&server, length);
-                if (n < 0) error("Sendto");
-                n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                             (struct sockaddr *)&from, &length);
-                if (n < 0) error("recvfrom");
+                while (true) {
+                    // retry if packet loss
+                    try {
+                        n = sendto(sock, marshalledReq.data(),
+                                   marshalledReq.size(), 0,
+                                   (const struct sockaddr *)&server, length);
+                        if (n < 0) throw std::invalid_argument("Lost packet");
+                        n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                     (struct sockaddr *)&from, &length);
+                        if (n < 0) throw std::invalid_argument("Lost packet");
+                        break;
+                    } catch (const std::exception &e) {
+                        std::cout << "Request timeout\n";
+                    }
+                }
                 // resize buffer for message unmarshalling validation
                 msg.resize(n);
                 resp = unmarshalWriteResponse(msg);
@@ -262,15 +318,24 @@ int main(int argc, char *argv[]) {
 
                 prepareSubscribeRequest(&req);
                 std::cout << "Marshalling subscribe request..." << '\n';
-                marshalledReq = marshalSubscribeRequest(req);
+                marshalledReq = marshalSubscribeRequest(id++, req);
 
                 std::cout << "Sending subscribe request to server..." << '\n';
-                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
-                           (const struct sockaddr *)&server, length);
-                if (n < 0) error("Sendto");
-                n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                             (struct sockaddr *)&from, &length);
-                if (n < 0) error("recvfrom");
+                while (true) {
+                    // retry if packet loss
+                    try {
+                        n = sendto(sock, marshalledReq.data(),
+                                   marshalledReq.size(), 0,
+                                   (const struct sockaddr *)&server, length);
+                        if (n < 0) throw std::invalid_argument("Lost packet");
+                        n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                     (struct sockaddr *)&from, &length);
+                        if (n < 0) throw std::invalid_argument("Lost packet");
+                        break;
+                    } catch (const std::exception &e) {
+                        std::cout << "Request timeout\n";
+                    }
+                }
                 // resize buffer for message unmarshalling validation
                 msg.resize(n);
                 resp = unmarshalSubscribeResponse(msg);
@@ -317,15 +382,24 @@ int main(int argc, char *argv[]) {
 
                 prepareReplaceRequest(&req);
                 std::cout << "Marshalling replace request..." << '\n';
-                marshalledReq = marshalReplaceRequest(req);
+                marshalledReq = marshalReplaceRequest(id++, req);
 
                 std::cout << "Sending replace request to server..." << '\n';
-                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
-                           (const struct sockaddr *)&server, length);
-                if (n < 0) error("Sendto");
-                n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                             (struct sockaddr *)&from, &length);
-                if (n < 0) error("recvfrom");
+                while (true) {
+                    // retry if packet loss
+                    try {
+                        n = sendto(sock, marshalledReq.data(),
+                                   marshalledReq.size(), 0,
+                                   (const struct sockaddr *)&server, length);
+                        if (n < 0) throw std::invalid_argument("Lost packet");
+                        n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                     (struct sockaddr *)&from, &length);
+                        if (n < 0) throw std::invalid_argument("Lost packet");
+                        break;
+                    } catch (const std::exception &e) {
+                        std::cout << "Request timeout\n";
+                    }
+                }
                 // resize buffer for message unmarshalling validation
                 msg.resize(n);
                 resp = unmarshalReplaceResponse(msg);
@@ -345,15 +419,24 @@ int main(int argc, char *argv[]) {
 
                 prepareDeleteRequest(&req);
                 std::cout << "Marshalling delete request..." << '\n';
-                marshalledReq = marshalDeleteRequest(req);
+                marshalledReq = marshalDeleteRequest(id++, req);
 
                 std::cout << "Sending delete request to server..." << '\n';
-                n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
-                           (const struct sockaddr *)&server, length);
-                if (n < 0) error("Sendto");
-                n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                             (struct sockaddr *)&from, &length);
-                if (n < 0) error("recvfrom");
+                while (true) {
+                    // retry if packet loss
+                    try {
+                        n = sendto(sock, marshalledReq.data(),
+                                   marshalledReq.size(), 0,
+                                   (const struct sockaddr *)&server, length);
+                        if (n < 0) throw std::invalid_argument("Lost packet");
+                        n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                     (struct sockaddr *)&from, &length);
+                        if (n < 0) throw std::invalid_argument("Lost packet");
+                        break;
+                    } catch (const std::exception &e) {
+                        std::cout << "Request timeout\n";
+                    }
+                }
                 // resize buffer for message unmarshalling validation
                 msg.resize(n);
                 resp = unmarshalDeleteResponse(msg);

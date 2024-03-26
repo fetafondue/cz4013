@@ -14,7 +14,7 @@ struct SubscribeResponse {
     std::string errorMessage;
 };
 
-std::vector<uint8_t> marshalSubscribeRequest(const SubscribeRequest &req);
+std::vector<uint8_t> marshalSubscribeRequest(const uint32_t &reqID, const SubscribeRequest &req);
 SubscribeResponse unmarshalSubscribeResponse(const std::vector<uint8_t> &res);
 void prepareSubscribeRequest(SubscribeRequest *req);
 
