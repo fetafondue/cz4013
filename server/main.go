@@ -20,16 +20,15 @@ var Conn *net.UDPConn // global variable representing the server's UDP connectio
 func parseFlags() (port *string, sem common.InvocationSemantic) {
 	// define flags
 	port = flag.String("port", "8080", "Port for server to listen on")
-
 	is := flag.String("is", "alo", "Invocation semantics to use. [at-least-once (alo), at-most-once (amo)]")
+	flag.Parse()
+
 	sem = common.AT_LEAST_ONCE
 	if *is == "amo" {
 		sem = common.AT_MOST_ONCE
 	}
 
-	flag.Parse()
-
-	return port, sem
+	return 
 }
 
 func getFullFileStorePath() (string, error) {
@@ -49,12 +48,8 @@ func handlePacket(sem common.InvocationSemantic, fileStorePath string) {
 		log.Println("Simulating loss of request message")
 		time.Sleep(11 * time.Second)
 		return
-	} else if randomChoice < 2 { // Additional 10% chance to loss of reply
-		log.Println("Simulating loss of reply message")
-		time.Sleep(11 * time.Second)
-		return
-	}
-	// Remaining 40% chance to proceed as usual => read from client
+	} 
+	// Remaining 90% chance to proceed as usual => read from client
 	data, clientAddress, err := network.ReadFromClient()
 	if err != nil {
 		log.Println("Error reading data:", err)
@@ -63,8 +58,10 @@ func handlePacket(sem common.InvocationSemantic, fileStorePath string) {
 	log.Println("Simulating proceeding as usual")
 
 	// process request
-	response := apis.RouteRequest(sem, fileStorePath, clientAddress, data)
-
+	response := apis.RouteRequest(sem, fileStorePath, clientAddress, data)	
+	if response == nil { // loss of reply
+		return
+	}
 	// respond to client
 	err = network.SendToClient(clientAddress, response)
 	if err != nil {

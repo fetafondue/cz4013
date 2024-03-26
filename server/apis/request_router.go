@@ -3,7 +3,10 @@ package apis
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
+	"math/rand"
 	"net"
+	"time"
 
 	"github.com/cz4013/server/apis/delete"
 	getlastmodifiedtime "github.com/cz4013/server/apis/get_last_modified_time"
@@ -42,9 +45,9 @@ func RouteRequest(sem common.InvocationSemantic, fileStorePath string, clientAdd
 	// get request message type, message ID & data
 	messageID := getMessageId(udp_request)
 	if sem == common.AT_MOST_ONCE {
-		// Check if the message has already been processed
+		// 2nd time for AT_MOST_ONCE => Resend the stored response
 		if response, ok := messageResponses[messageID]; ok {
-			// Duplicate message received, Resend the stored response
+			log.Println("returning stored response with AT MOST ONCE semantics")
 			return response
 		}
 	}
@@ -55,23 +58,32 @@ func RouteRequest(sem common.InvocationSemantic, fileStorePath string, clientAdd
 	switch messageType {
 	case READ:
 		messageResponses[messageID] = read.Handler(fileStorePath, clientAddr, data)
-		return messageResponses[messageID]
 	case WRITE:
 		messageResponses[messageID] = write.Handler(fileStorePath, clientAddr, data)
-		return messageResponses[messageID]
 	case SUBSCRIBE:
 		messageResponses[messageID] = subscribe.Handler(fileStorePath, clientAddr, data)
-		return messageResponses[messageID]
 	case REPLACE:
 		messageResponses[messageID] = replace.Handler(fileStorePath, clientAddr, data)
-		return messageResponses[messageID]
 	case DELETE:
 		messageResponses[messageID] = delete.Handler(fileStorePath, clientAddr, data)
-		return messageResponses[messageID]
 	case GET_LAST_MODIFIED_TIME:
 		messageResponses[messageID] = getlastmodifiedtime.Handler(fileStorePath, clientAddr, data)
-		return messageResponses[messageID]
 	default:
 		return []byte("invalid request: not a supported message type")
 	}
+	// 1st time for AT_MOST_ONCE => loss of response
+	if sem == common.AT_MOST_ONCE {
+		log.Println("Simulating loss of reply message for amo")
+		time.Sleep(11*time.Second)
+		return nil
+	} else {
+		rand.Seed(time.Now().UnixNano())
+		randomChoice := rand.Intn(10) 
+		if randomChoice <= 5 {
+			log.Println("Simulating loss of reply message for alo")
+			time.Sleep(11*time.Second)
+			return nil
+		}
+	}
+	return messageResponses[messageID] 
 }
