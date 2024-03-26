@@ -40,13 +40,13 @@ func handlePacket(fileStorePath string) {
 	// Randomly decide what to do with the client's request
 	rand.Seed(time.Now().UnixNano())
 	randomChoice := rand.Intn(10) // Generate a random number between 0 and 9
-	if randomChoice < 3 { // 30% chance of loss of request
+	if randomChoice < 1 { // 10% chance of loss of request
 		log.Println("Simulating loss of request message")
-		time.Sleep(2*time.Minute)
+		time.Sleep(11*time.Second)
 		return
-	} else if randomChoice < 6 { // Additional 30% chance to loss of reply 
+	} else if randomChoice < 2 { // Additional 10% chance to loss of reply 
 		log.Println("Simulating loss of reply message")
-		time.Sleep(2*time.Minute)
+		time.Sleep(11*time.Second)
 		return
 	}
 	// Remaining 40% chance to proceed as usual => read from client
@@ -55,6 +55,7 @@ func handlePacket(fileStorePath string) {
 		log.Println("Error reading data:", err)
 		return
 	}
+	log.Println("Simulating proceeding as usual")
 
 	// process request
 	response := apis.RouteRequest(fileStorePath, clientAddress, data)
