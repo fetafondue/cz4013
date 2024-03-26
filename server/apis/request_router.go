@@ -14,6 +14,9 @@ import (
 	"github.com/cz4013/server/common"
 )
 
+var messageResponses = make(map[uint32][]byte) // global map to store message IDs and their responses
+var atLeastOnce = false
+
 func validateRequest(req []byte) error {
 	// request should at least contain MessageType & message ID (uint32)
 	if len(req) < common.MessageTypeLength + common.Uint32ByteLength {
@@ -38,24 +41,37 @@ func RouteRequest(fileStorePath string, clientAddr *net.UDPAddr, udp_request []b
 	}
 
 	// get request message type, message ID & data
+	messageID := getMessageId(udp_request) 
+	if atLeastOnce {
+		// Check if the message has already been processed
+		if response, ok := messageResponses[messageID]; ok {
+			// Duplicate message received, Resend the stored response
+			return response
+		}
+	}
 	messageType := getMessageType(udp_request)
-	messageID := getMessageId(udp_request) //todo
 	data := udp_request[common.MessageTypeLength+common.Uint32ByteLength:]
 
 	// route request to the corresponding server method based on message type
 	switch messageType {
 	case READ:
-		return read.Handler(fileStorePath, clientAddr, data)
+		messageResponses[messageID] = read.Handler(fileStorePath, clientAddr, data)
+		return messageResponses[messageID]
 	case WRITE:
-		return write.Handler(fileStorePath, clientAddr, data)
+		messageResponses[messageID] = write.Handler(fileStorePath, clientAddr, data)
+		return messageResponses[messageID]
 	case SUBSCRIBE:
-		return subscribe.Handler(fileStorePath, clientAddr, data)
+		messageResponses[messageID] = subscribe.Handler(fileStorePath, clientAddr, data)
+		return messageResponses[messageID]
 	case REPLACE:
-		return replace.Handler(fileStorePath, clientAddr, data)
+		messageResponses[messageID] = replace.Handler(fileStorePath, clientAddr, data)
+		return messageResponses[messageID]
 	case DELETE:
-		return delete.Handler(fileStorePath, clientAddr, data)
+		messageResponses[messageID] = delete.Handler(fileStorePath, clientAddr, data)
+		return messageResponses[messageID]
 	case GET_LAST_MODIFIED_TIME:
-		return getlastmodifiedtime.Handler(fileStorePath, clientAddr, data)
+		messageResponses[messageID] = getlastmodifiedtime.Handler(fileStorePath, clientAddr, data)
+		return messageResponses[messageID]
 	default:
 		return []byte("invalid request: not a supported message type")
 	}

@@ -15,8 +15,6 @@ import (
 )
 
 var Conn *net.UDPConn // global variable representing the server's UDP connection
-var atLeastOnce = false
-var messageResponses = make(map[int][]byte) // global map to store message IDs and their responses
 
 // parse command-line arguments flags
 func parseFlags() (port *string) {
@@ -38,11 +36,6 @@ func getFullFileStorePath() (string, error) {
 	return currentDir + common.FilesDir, nil
 }
 
-func extractMessageID(data []byte) (int, error) {
-	// to do
-	return 0, nil
-}
-
 func handlePacket(fileStorePath string) {
 	// Randomly decide what to do with the client's request
 	rand.Seed(time.Now().UnixNano())
@@ -62,27 +55,9 @@ func handlePacket(fileStorePath string) {
 		log.Println("Error reading data:", err)
 		return
 	}
-	// extract message ID from the data
-	messageID, err := extractMessageID(data) 
-	if err != nil {
-		log.Println("Error getting message ID", err)
-		return
-	}
-	if atLeastOnce {
-		// Check if the message has already been processed
-		if response, ok := messageResponses[messageID]; ok {
-			log.Println("Duplicate message received, resending response")
-			// Resend the stored response
-			err = network.SendToClient(clientAddress, response)
-			if err != nil {
-				log.Println("Error sending response:", err)
-			}
-			return
-		}
-	}
+
 	// process request
 	response := apis.RouteRequest(fileStorePath, clientAddress, data)
-	messageResponses[messageID] = response
 
 	// respond to client
 	err = network.SendToClient(clientAddress, response)
