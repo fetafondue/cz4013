@@ -19,6 +19,6 @@ struct DeleteResponse
 
 std::vector<uint8_t> marshalDeleteRequest(const DeleteRequest &req);
 DeleteResponse unmarshalDeleteResponse(const std::vector<uint8_t> &res);
-void handleDeleteRequest(DeleteRequest *req);
+void prepareDeleteRequest(DeleteRequest *req);
 
 #endif

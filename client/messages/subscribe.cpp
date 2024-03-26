@@ -84,7 +84,7 @@ SubscribeResponse unmarshalSubscribeResponse(const std::vector<uint8_t> &res) {
     return {false, errMsg};
 }
 
-void handleSubscribeRequest(SubscribeRequest *req) {
+void prepareSubscribeRequest(SubscribeRequest *req) {
     char buffer[1024];
     std::string pathname, offset, content;
 

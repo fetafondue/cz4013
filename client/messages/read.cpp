@@ -61,7 +61,7 @@ ReadResponse unmarshalReadResponse(const std::vector<uint8_t> &res)
     return {false, "", str};
 }
 
-void handleReadRequest(ReadRequest *req) {
+void prepareReadRequest(ReadRequest *req) {
     char buffer[1024];
     std::string pathname, offset, numBytes;
 

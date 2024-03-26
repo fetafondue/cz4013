@@ -19,6 +19,6 @@ struct WriteResponse
 
 std::vector<uint8_t> marshalWriteRequest(const WriteRequest &req);
 WriteResponse unmarshalWriteResponse(const std::vector<uint8_t> &res);
-void handleWriteRequest(WriteRequest *req);
+void prepareWriteRequest(WriteRequest *req);
 
 #endif

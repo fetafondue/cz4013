@@ -19,6 +19,6 @@ struct ReplaceResponse
 
 std::vector<uint8_t> marshalReplaceRequest(const ReplaceRequest &req);
 ReplaceResponse unmarshalReplaceResponse(const std::vector<uint8_t> &res);
-void handleReplaceRequest(ReplaceRequest *req);
+void prepareReplaceRequest(ReplaceRequest *req);
 
 #endif

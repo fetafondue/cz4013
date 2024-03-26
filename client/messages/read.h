@@ -20,6 +20,6 @@ struct ReadResponse
 
 std::vector<uint8_t> marshalReadRequest(const ReadRequest &req);
 ReadResponse unmarshalReadResponse(const std::vector<uint8_t> &res);
-void handleReadRequest(ReadRequest *req);
+void prepareReadRequest(ReadRequest *req);
 
 #endif

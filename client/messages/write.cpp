@@ -94,7 +94,7 @@ WriteResponse unmarshalWriteResponse(const std::vector<uint8_t> &res) {
     return {false, errMsg};
 }
 
-void handleWriteRequest(WriteRequest *req) {
+void prepareWriteRequest(WriteRequest *req) {
     char buffer[1024];
     std::string pathname, offset, content;
 

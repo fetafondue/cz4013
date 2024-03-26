@@ -67,37 +67,12 @@ int main(int argc, char *argv[]) {
                 ReadRequest readReq;
                 ReadResponse readResp;
                 std::vector<uint8_t> marshalledReq;
-                bool fileInCache = false;
 
-                handleReadRequest(&readReq);
-                if (isValidCacheEntry(readReq.pathname)) {
-                    std::cout
-                        << "Valid cache entry, retrieving data from cache..."
-                        << '\n';
-                    std::string data = cacheRead(
-                        readReq.pathname, readReq.offset, readReq.numBytes);
-                    std::cout << "Data: {" << data << "}" << '\n';
-                } else {
-                    std::cout << "Marshalling read request..." << '\n';
-                    marshalledReq = marshalReadRequest(readReq);
-                    std::cout << "Sending read request to server for file {"
-                              << readReq.pathname << "} ..." << '\n';
-                    n = sendto(sock, marshalledReq.data(), marshalledReq.size(),
-                               0, (const struct sockaddr *)&server, length);
-                    if (n < 0) error("Sendto");
-                    n = recvfrom(sock, msg.data(), msg.capacity(), 0,
-                                 (struct sockaddr *)&from, &length);
-                    if (n < 0) error("recvfrom");
-                    // resize buffer for message unmarshalling validation
-                    msg.resize(n);
-                    readResp = unmarshalReadResponse(msg);
-                    std::cout << "Got an ack, content is: {" << readResp.content
-                              << '}' << '\n';
-
-                    // clear the vector and assign memory for it
-                    msg.clear();
-                    msg.resize(5000);
-
+                prepareReadRequest(&readReq);
+                // if the file does not exist in the cache or is outside the
+                // cached index, fire to server
+                if (!fileInCache(readReq.pathname, readReq.offset,
+                                 readReq.numBytes)) {
                     // get last modified time at server
                     GetLastModifiedTimeRequest timeReq;
                     GetLastModifiedTimeResponse timeResp;
@@ -123,10 +98,105 @@ int main(int argc, char *argv[]) {
                     std::cout
                         << "Got an ack, last modified time at server is: {"
                         << timeResp.lastModifiedUnixTime << '}' << '\n';
+
+                    // clear the vector and assign memory for it
+                    msg.clear();
+                    msg.resize(5000);
+
+                    std::cout << "Marshalling read request..." << '\n';
+                    marshalledReq = marshalReadRequest(readReq);
+                    std::cout << "Sending read request to server for file {"
+                              << readReq.pathname << "} ..." << '\n';
+                    n = sendto(sock, marshalledReq.data(), marshalledReq.size(),
+                               0, (const struct sockaddr *)&server, length);
+                    if (n < 0) error("Sendto");
+                    n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                 (struct sockaddr *)&from, &length);
+                    if (n < 0) error("recvfrom");
+                    // resize buffer for message unmarshalling validation
+                    msg.resize(n);
+                    readResp = unmarshalReadResponse(msg);
+                    std::cout << "Got an ack, content is: {" << readResp.content
+                              << '}' << '\n';
                     std::cout << "Writing to cache..." << '\n';
                     cacheWrite(timeReq.pathname, readResp.content,
-                               timeResp.lastModifiedUnixTime);
+                               timeResp.lastModifiedUnixTime, readReq.offset);
                     std::cout << "Successfully cached response" << '\n';
+                }
+                // if cache expired
+                else if (cacheExpired(readReq.pathname)) {
+                    // check server for tmserver and check if file has been
+                    // changed
+                    GetLastModifiedTimeRequest timeReq;
+                    GetLastModifiedTimeResponse timeResp;
+                    std::vector<uint8_t> marshalledTimeReq;
+                    // build request
+                    timeReq.pathname = readReq.pathname;
+                    std::cout << "Marshalling last modified time request..."
+                              << '\n';
+                    marshalledTimeReq =
+                        marshalGetLastModifiedTimeRequest(timeReq);
+                    std::cout << "Sending request for last modified time..."
+                              << '\n';
+                    n = sendto(sock, marshalledTimeReq.data(),
+                               marshalledTimeReq.size(), 0,
+                               (const struct sockaddr *)&server, length);
+                    if (n < 0) error("Sendto");
+                    n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                 (struct sockaddr *)&from, &length);
+                    if (n < 0) error("recvfrom");
+                    // resize buffer for message unmarshalling validation
+                    msg.resize(n);
+                    timeResp = unmarshalGetLastModifiedTimeResponse(msg);
+                    std::cout
+                        << "Got an ack, last modified time at server is: {"
+                        << timeResp.lastModifiedUnixTime << '}' << '\n';
+                    // if it has been changed then fire to server get last
+                    // modified time at server
+                    if (fileChangedAtServer(readReq.pathname,
+                                            timeResp.lastModifiedUnixTime)) {
+                        // clear the vector and assign memory for it
+                        msg.clear();
+                        msg.resize(5000);
+
+                        std::cout << "Marshalling read request..." << '\n';
+                        marshalledReq = marshalReadRequest(readReq);
+                        std::cout << "Sending read request to server for file {"
+                                  << readReq.pathname << "} ..." << '\n';
+                        n = sendto(sock, marshalledReq.data(),
+                                   marshalledReq.size(), 0,
+                                   (const struct sockaddr *)&server, length);
+                        if (n < 0) error("Sendto");
+                        n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                     (struct sockaddr *)&from, &length);
+                        if (n < 0) error("recvfrom");
+                        // resize buffer for message unmarshalling validation
+                        msg.resize(n);
+                        readResp = unmarshalReadResponse(msg);
+                        std::cout << "Got an ack, content is: {"
+                                  << readResp.content << '}' << '\n';
+                        std::cout << "Writing to cache..." << '\n';
+                        cacheWrite(timeReq.pathname, readResp.content,
+                                   timeResp.lastModifiedUnixTime,
+                                   readReq.offset);
+                        std::cout << "Successfully cached response" << '\n';
+                    } else {
+                        std::cout
+                            << "Valid cache entry, retrieving data from cache..."
+                            << '\n';
+                        std::string data = cacheRead(
+                            readReq.pathname, readReq.offset, readReq.numBytes);
+                        std::cout << "Data: {" << data << "}" << '\n';
+                    }
+                }
+                // else, just read from cache
+                else {
+                    std::cout
+                        << "Valid cache entry, retrieving data from cache..."
+                        << '\n';
+                    std::string data = cacheRead(
+                        readReq.pathname, readReq.offset, readReq.numBytes);
+                    std::cout << "Data: {" << data << "}" << '\n';
                 }
                 break;
             }
@@ -135,7 +205,7 @@ int main(int argc, char *argv[]) {
                 WriteResponse resp;
                 std::vector<uint8_t> marshalledReq;
 
-                handleWriteRequest(&req);
+                prepareWriteRequest(&req);
                 std::cout << "Marshalling write request..." << '\n';
                 marshalledReq = marshalWriteRequest(req);
 
@@ -159,7 +229,7 @@ int main(int argc, char *argv[]) {
                 SubscribeResponse resp;
                 std::vector<uint8_t> marshalledReq;
 
-                handleSubscribeRequest(&req);
+                prepareSubscribeRequest(&req);
                 std::cout << "Marshalling subscribe request..." << '\n';
                 marshalledReq = marshalSubscribeRequest(req);
 
@@ -188,7 +258,7 @@ int main(int argc, char *argv[]) {
                 ReplaceResponse resp;
                 std::vector<uint8_t> marshalledReq;
 
-                handleReplaceRequest(&req);
+                prepareReplaceRequest(&req);
                 std::cout << "Marshalling replace request..." << '\n';
                 marshalledReq = marshalReplaceRequest(req);
 
@@ -212,7 +282,7 @@ int main(int argc, char *argv[]) {
                 DeleteResponse resp;
                 std::vector<uint8_t> marshalledReq;
 
-                handleDeleteRequest(&req);
+                prepareDeleteRequest(&req);
                 std::cout << "Marshalling delete request..." << '\n';
                 marshalledReq = marshalDeleteRequest(req);
 

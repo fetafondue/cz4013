@@ -80,7 +80,7 @@ ReplaceResponse unmarshalReplaceResponse(const std::vector<uint8_t> &res)
     return {false, errMsg};
 }
 
-void handleReplaceRequest(ReplaceRequest *req) {
+void prepareReplaceRequest(ReplaceRequest *req) {
     char buffer[1024];
     std::string pathname, offset, content;
 

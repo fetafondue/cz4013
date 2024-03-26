@@ -77,7 +77,7 @@ DeleteResponse unmarshalDeleteResponse(const std::vector<uint8_t> &res)
     return {false, errMsg};
 }
 
-void handleDeleteRequest(DeleteRequest *req) {
+void prepareDeleteRequest(DeleteRequest *req) {
     char buffer[1024];
     std::string pathname, offset, numBytes;
 
