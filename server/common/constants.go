@@ -8,3 +8,11 @@ const MessageTypeLength = 1
 
 // file path
 const FilesDir = "/disk"
+
+// invocation semantics
+type InvocationSemantic int
+
+const (
+	AT_LEAST_ONCE InvocationSemantic = iota
+	AT_MOST_ONCE
+)

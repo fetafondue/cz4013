@@ -15,11 +15,10 @@ import (
 )
 
 var messageResponses = make(map[uint32][]byte) // global map to store message IDs and their responses
-var atLeastOnce = true
 
 func validateRequest(req []byte) error {
 	// request should at least contain MessageType & message ID (uint32)
-	if len(req) < common.MessageTypeLength + common.Uint32ByteLength {
+	if len(req) < common.MessageTypeLength+common.Uint32ByteLength {
 		return fmt.Errorf("invalid request: byte array length is too short")
 	}
 	return nil
@@ -31,18 +30,18 @@ func getMessageType(req []byte) MessageType {
 }
 
 func getMessageId(req []byte) uint32 {
-	return binary.BigEndian.Uint32(req[common.MessageTypeLength:common.MessageTypeLength+common.Uint32ByteLength])
+	return binary.BigEndian.Uint32(req[common.MessageTypeLength : common.MessageTypeLength+common.Uint32ByteLength])
 }
 
-func RouteRequest(fileStorePath string, clientAddr *net.UDPAddr, udp_request []byte) []byte {
+func RouteRequest(sem common.InvocationSemantic, fileStorePath string, clientAddr *net.UDPAddr, udp_request []byte) []byte {
 	err := validateRequest(udp_request)
 	if err != nil {
 		return []byte(err.Error())
 	}
 
 	// get request message type, message ID & data
-	messageID := getMessageId(udp_request) 
-	if atLeastOnce {
+	messageID := getMessageId(udp_request)
+	if sem == common.AT_MOST_ONCE {
 		// Check if the message has already been processed
 		if response, ok := messageResponses[messageID]; ok {
 			// Duplicate message received, Resend the stored response
