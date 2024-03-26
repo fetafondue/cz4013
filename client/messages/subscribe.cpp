@@ -6,7 +6,8 @@
 #include "message_type.h"
 
 // Marshals a SUBSCRIBE request into a byte vector
-std::vector<uint8_t> marshalSubscribeRequest(const SubscribeRequest &req) {
+std::vector<uint8_t> marshalSubscribeRequest(const uint32_t &reqID, const SubscribeRequest &req)
+{
     std::vector<uint8_t> pathnameBytes(req.pathname.begin(),
                                        req.pathname.end());
     uint32_t pathnameLen = pathnameBytes.size();
@@ -18,24 +19,27 @@ std::vector<uint8_t> marshalSubscribeRequest(const SubscribeRequest &req) {
 
     // insert MessageType into buf
     buf[0] = SUBSCRIBE;
+    // insert message ID into buf
+    std::memcpy(buf.data() + sizeof(MessageType), &reqID, sizeof(uint32_t));
 
     // insert pathname length and itself into buf
-    uint32_t pathnameLenBE = htonl(pathnameLen);  // big endian format
-    std::memcpy(buf.data() + sizeof(MessageType), &pathnameLenBE,
+    uint32_t pathnameLenBE = htonl(pathnameLen); // big endian format
+    std::memcpy(buf.data() + sizeof(MessageType) + sizeof(uint32_t), &pathnameLenBE,
                 sizeof(uint32_t));
-    std::memcpy(buf.data() + sizeof(MessageType) + sizeof(uint32_t),
+    std::memcpy(buf.data() + sizeof(MessageType) + 2 * sizeof(uint32_t),
                 pathnameBytes.data(), pathnameLen);
     // insert monitorIntervalSeconds into buf
     uint32_t monitorIntervalSecondsBE =
-        htonl(req.monitorIntervalSeconds);  // big endian format
+        htonl(req.monitorIntervalSeconds); // big endian format
     std::memcpy(
-        buf.data() + sizeof(MessageType) + sizeof(uint32_t) + pathnameLen,
+        buf.data() + sizeof(MessageType) + 2 * sizeof(uint32_t) + pathnameLen,
         &monitorIntervalSecondsBE, sizeof(uint32_t));
 
     return buf;
 }
 
-bool validateMarshalledSubscribeResponse(const std::vector<uint8_t> &res) {
+bool validateMarshalledSubscribeResponse(const std::vector<uint8_t> &res)
+{
     // ensure that the byte vector is at least its minimum length (single bool)
     if (res.size() == 0)
         throw std::invalid_argument(
@@ -44,7 +48,8 @@ bool validateMarshalledSubscribeResponse(const std::vector<uint8_t> &res) {
     bool success = res[0] == 1;
 
     // case of only bool present
-    if (res.size() == sizeof(bool)) {
+    if (res.size() == sizeof(bool))
+    {
         // should not have success = false
         if (!success)
             throw std::invalid_argument(
@@ -72,11 +77,13 @@ bool validateMarshalledSubscribeResponse(const std::vector<uint8_t> &res) {
 }
 
 // Unmarshals a byte vector into a SubscribeResponse struct
-SubscribeResponse unmarshalSubscribeResponse(const std::vector<uint8_t> &res) {
+SubscribeResponse unmarshalSubscribeResponse(const std::vector<uint8_t> &res)
+{
     bool success = validateMarshalledSubscribeResponse(res);
 
     // successful
-    if (success) return {true, ""};
+    if (success)
+        return {true, ""};
 
     // extract errorMessage if unsuccessful
     std::string errMsg(res.begin() + sizeof(bool) + sizeof(uint32_t),
@@ -85,7 +92,8 @@ SubscribeResponse unmarshalSubscribeResponse(const std::vector<uint8_t> &res) {
     return {false, errMsg};
 }
 
-void prepareSubscribeRequest(SubscribeRequest *req) {
+void prepareSubscribeRequest(SubscribeRequest *req)
+{
     char buffer[1024];
     std::string pathname, content;
 
@@ -94,28 +102,35 @@ void prepareSubscribeRequest(SubscribeRequest *req) {
         "the file\n");
     bzero(buffer, 1024);
     fgets(buffer, 1023, stdin);
-    for (int i = 0; i < strlen(buffer); i++) {
+    for (int i = 0; i < strlen(buffer); i++)
+    {
         pathname += buffer[i];
     }
     pathname.erase(std::remove_if(pathname.begin(), pathname.end(), ::isspace),
                    pathname.end());
     req->pathname = pathname;
 
-    while (true) {
+    while (true)
+    {
         std::string interval;
         printf("Please enter the monitoring interval\n");
         bzero(buffer, 1024);
         fgets(buffer, 1023, stdin);
-        for (int i = 0; i < strlen(buffer); i++) {
+        for (int i = 0; i < strlen(buffer); i++)
+        {
             interval += buffer[i];
         }
-        try {
-            if (stoi(interval) < 0) {
+        try
+        {
+            if (stoi(interval) < 0)
+            {
                 throw std::invalid_argument("Negative input");
             }
             req->monitorIntervalSeconds = stoi(interval);
             break;
-        } catch (const std::exception &e) {
+        }
+        catch (const std::exception &e)
+        {
             std::cout << "Invalid input, please enter a positive integer\n";
         }
     }
