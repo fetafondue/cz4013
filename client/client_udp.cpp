@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     std::vector<uint8_t> msg;
 
     if (argc != 4) {
-        printf("Missing arguments\n");
+        std::cout << "Missing arguments" << '\n';
         exit(1);
     }
 
@@ -50,14 +50,13 @@ int main(int argc, char *argv[]) {
 
     // keep accepting requests from the user
     while (1) {
-        printf(
-            "What would you like to do?\n"
-            "1. Read file content\n"
-            "2. Write to file\n"
-            "3. Monitor updates\n"
-            "4. Replace file content\n"
-            "5. Delete file content\n"
-            "6. End the program\n");
+        std::cout << "What would you like to do?\n"
+                  << "1. Read file content\n"
+                  << "2. Write to file\n"
+                  << "3. Monitor updates\n"
+                  << "4. Replace file content\n"
+                  << "5. Delete file content\n"
+                  << "6. End the program\n";
         // clear the vector and assign memory for it
         msg.clear();
         msg.resize(5000);
@@ -75,17 +74,14 @@ int main(int argc, char *argv[]) {
                     std::cout
                         << "Valid cache entry, retrieving data from cache..."
                         << '\n';
-                    std::string data = cacheRead(readReq.pathname);
+                    std::string data = cacheRead(
+                        readReq.pathname, readReq.offset, readReq.numBytes);
                     std::cout << "Data: {" << data << "}" << '\n';
                 } else {
-                    std::cout
-                        << "File data not found in cache, reading file from "
-                           "server"
-                        << '\n';
-                    std::cout << "Marshalling request..." << '\n';
+                    std::cout << "Marshalling read request..." << '\n';
                     marshalledReq = marshalReadRequest(readReq);
-                    std::cout << "Sending request to server for file "
-                              << readReq.pathname << " ..." << '\n';
+                    std::cout << "Sending read request to server for file {"
+                              << readReq.pathname << "} ..." << '\n';
                     n = sendto(sock, marshalledReq.data(), marshalledReq.size(),
                                0, (const struct sockaddr *)&server, length);
                     if (n < 0) error("Sendto");
@@ -98,44 +94,39 @@ int main(int argc, char *argv[]) {
                     std::cout << "Got an ack, content is: {" << readResp.content
                               << '}' << '\n';
 
-                    // TODO: below, figure out why the response marshalling
-                    // validation is failing
+                    // clear the vector and assign memory for it
+                    msg.clear();
+                    msg.resize(5000);
 
-                    // // clear the vector and assign memory for it
-                    // msg.clear();
-                    // msg.resize(5000);
-
-                    // // get last modified time at server
-                    // GetLastModifiedTimeRequest timeReq;
-                    // GetLastModifiedTimeResponse timeResp;
-                    // std::vector<uint8_t> marshalledTimeReq;
-                    // // build request
-                    // timeReq.pathname = readReq.pathname;
-                    // std::cout << "Marshalling last modified time request..."
-                    //           << '\n';
-                    // marshalledTimeReq =
-                    //     marshalGetLastModifiedTimeRequest(timeReq);
-                    // std::cout << "Sending request for last modified time..."
-                    //           << '\n';
-                    // n = sendto(sock, marshalledTimeReq.data(),
-                    //            marshalledTimeReq.size(), 0,
-                    //            (const struct sockaddr *)&server, length);
-                    // if (n < 0) error("Sendto");
-                    // n = recvfrom(sock, msg.data(),
-                    //              msg.capacity(), 0,
-                    //              (struct sockaddr *)&from, &length);
-                    // if (n < 0) error("recvfrom");
-                    // // resize buffer for message unmarshalling validation
-                    // msg.resize(n);
-                    // timeResp =
-                    //     unmarshalGetLastModifiedTimeResponse(msg);
-                    // std::cout << "Got an ack, last modified time at server
-                    // is: {" << timeResp.lastModifiedUnixTime
-                    //           << '}' << '\n';
-                    // std::cout << "Writing to cache..." << '\n';
-                    // cacheWrite(timeReq.pathname, readResp.content,
-                    //            timeResp.lastModifiedUnixTime);
-                    // std::cout << "Successfully cached response" << '\n';
+                    // get last modified time at server
+                    GetLastModifiedTimeRequest timeReq;
+                    GetLastModifiedTimeResponse timeResp;
+                    std::vector<uint8_t> marshalledTimeReq;
+                    // build request
+                    timeReq.pathname = readReq.pathname;
+                    std::cout << "Marshalling last modified time request..."
+                              << '\n';
+                    marshalledTimeReq =
+                        marshalGetLastModifiedTimeRequest(timeReq);
+                    std::cout << "Sending request for last modified time..."
+                              << '\n';
+                    n = sendto(sock, marshalledTimeReq.data(),
+                               marshalledTimeReq.size(), 0,
+                               (const struct sockaddr *)&server, length);
+                    if (n < 0) error("Sendto");
+                    n = recvfrom(sock, msg.data(), msg.capacity(), 0,
+                                 (struct sockaddr *)&from, &length);
+                    if (n < 0) error("recvfrom");
+                    // resize buffer for message unmarshalling validation
+                    msg.resize(n);
+                    timeResp = unmarshalGetLastModifiedTimeResponse(msg);
+                    std::cout
+                        << "Got an ack, last modified time at server is: {"
+                        << timeResp.lastModifiedUnixTime << '}' << '\n';
+                    std::cout << "Writing to cache..." << '\n';
+                    cacheWrite(timeReq.pathname, readResp.content,
+                               timeResp.lastModifiedUnixTime);
+                    std::cout << "Successfully cached response" << '\n';
                 }
                 break;
             }
@@ -145,10 +136,10 @@ int main(int argc, char *argv[]) {
                 std::vector<uint8_t> marshalledReq;
 
                 handleWriteRequest(&req);
-                printf("Marshalling request...\n");
+                std::cout << "Marshalling write request..." << '\n';
                 marshalledReq = marshalWriteRequest(req);
 
-                printf("Sending write request to server...\n");
+                std::cout << "Sending write request to server..." << '\n';
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
@@ -169,10 +160,10 @@ int main(int argc, char *argv[]) {
                 std::vector<uint8_t> marshalledReq;
 
                 handleSubscribeRequest(&req);
-                printf("Marshalling request...\n");
+                std::cout << "Marshalling subscribe request..." << '\n';
                 marshalledReq = marshalSubscribeRequest(req);
 
-                printf("Sending subscribe request to server...\n");
+                std::cout << "Sending subscribe request to server..." << '\n';
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
@@ -182,13 +173,12 @@ int main(int argc, char *argv[]) {
                 // resize buffer for message unmarshalling validation
                 msg.resize(n);
                 resp = unmarshalSubscribeResponse(msg);
-                std::cout << "Got an ack, subscribe success is " << std::boolalpha
-                          << resp.success << '\n';
+                std::cout << "Got an ack, subscribe success is "
+                          << std::boolalpha << resp.success << '\n';
 
-                printf(
-                    "Subscribe request success, listening to server for %d "
-                    "seconds...\n",
-                    req.monitorIntervalSeconds);
+                std::cout
+                    << "Subscribe request success, listening to server for "
+                    << req.monitorIntervalSeconds << " seconds..." << '\n';
                 // TODO: whats the best way to listen to the server changes
 
                 break;
@@ -199,10 +189,10 @@ int main(int argc, char *argv[]) {
                 std::vector<uint8_t> marshalledReq;
 
                 handleReplaceRequest(&req);
-                printf("Marshalling request...\n");
+                std::cout << "Marshalling replace request..." << '\n';
                 marshalledReq = marshalReplaceRequest(req);
 
-                printf("Sending replace request to server...\n");
+                std::cout << "Sending replace request to server..." << '\n';
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
@@ -223,10 +213,10 @@ int main(int argc, char *argv[]) {
                 std::vector<uint8_t> marshalledReq;
 
                 handleDeleteRequest(&req);
-                printf("Marshalling request...\n");
+                std::cout << "Marshalling delete request..." << '\n';
                 marshalledReq = marshalDeleteRequest(req);
 
-                printf("Sending delete request to server...\n");
+                std::cout << "Sending delete request to server..." << '\n';
                 n = sendto(sock, marshalledReq.data(), marshalledReq.size(), 0,
                            (const struct sockaddr *)&server, length);
                 if (n < 0) error("Sendto");
@@ -242,7 +232,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case '6':
-                printf("Terminating program\n");
+                std::cout << "Terminating program" << '\n';
                 close(sock);
                 return 0;
             default:

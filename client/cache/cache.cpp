@@ -1,9 +1,10 @@
 #include "cache.h"
-#include "../messages/get_last_modified_time.h"
 
 #include <chrono>
 #include <iostream>
 #include <unordered_map>
+
+#include "../messages/get_last_modified_time.h"
 
 std::unordered_map<std::string,
                    std::pair<std::pair<long long, long long>, std::string> >
@@ -52,16 +53,27 @@ void cacheWrite(std::string filename, std::string filecontent,
     }
 }
 
-std::string cacheRead(std::string filename) {
+std::string cacheRead(std::string filename, uint32_t offset,
+                      uint32_t bytesToRead) {
     if (cache.find(filename) == cache.end()) {
         return "";
     } else {
-        return cache[filename].second;
+        std::string data = cache[filename].second;
+        std::string res;
+        for (int i=offset;i<bytesToRead;i++) {
+            if (i>=data.size()){
+                break;
+            }
+            res += data[i];
+        }
+        return res;
     }
 }
 
 bool isValidCacheEntry(std::string filename) {
     if (cache.find(filename) == cache.end()) {
+        std::cout << "File data not found in cache, reading file from server"
+                  << '\n';
         return false;
     }
     // get curr time t
@@ -73,5 +85,6 @@ bool isValidCacheEntry(std::string filename) {
     if (t - tc < fInterval) {
         return true;
     }
+    std::cout << "Cache data has expired, reading file from server" << '\n';
     return false;
 }

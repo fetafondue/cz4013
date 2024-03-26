@@ -14,7 +14,7 @@ extern long long fInterval;
 
 void cacheWrite(std::string filename, std::string filecontent,
                 long long tmserver);
-std::string cacheRead(std::string filename);
+std::string cacheRead(std::string filename, uint32_t offset, uint32_t bytesToRead);
 bool isValidCacheEntry(std::string filename);
 
 #endif
