@@ -91,11 +91,11 @@ int main(int argc, char *argv[]) {
                               << '\n';
                     marshalledTimeReq =
                         marshalGetLastModifiedTimeRequest(++id, timeReq);
-                    std::cout << "Sending request for last modified time..."
-                              << '\n';
                     while (true) {
                         // retry if packet loss
                         try {
+                            std::cout << "Sending request for last modified time..."
+                                    << '\n';
                             n = sendto(sock, marshalledTimeReq.data(),
                                        marshalledTimeReq.size(), 0,
                                        (const struct sockaddr *)&server,
@@ -129,11 +129,11 @@ int main(int argc, char *argv[]) {
 
                     std::cout << "Marshalling read request..." << '\n';
                     marshalledReq = marshalReadRequest(id++, readReq);
-                    std::cout << "Sending read request to server for file {"
-                              << readReq.pathname << "} ..." << '\n';
                     while (true) {
                         // retry if packet loss
                         try {
+                            std::cout << "Sending read request to server for "
+                                    << readReq.pathname << " ..." << '\n';
                             n = sendto(sock, marshalledReq.data(),
                                        marshalledReq.size(), 0,
                                        (const struct sockaddr *)&server,
@@ -179,11 +179,11 @@ int main(int argc, char *argv[]) {
                               << '\n';
                     marshalledTimeReq =
                         marshalGetLastModifiedTimeRequest(id++, timeReq);
-                    std::cout << "Sending request for last modified time..."
-                              << '\n';
                     while (true) {
                         // retry if packet loss
                         try {
+                            std::cout << "Sending request for last modified time..."
+                                    << '\n';
                             n = sendto(sock, marshalledTimeReq.data(),
                                        marshalledTimeReq.size(), 0,
                                        (const struct sockaddr *)&server,
@@ -295,10 +295,10 @@ int main(int argc, char *argv[]) {
                 std::cout << "Marshalling write request..." << '\n';
                 marshalledReq = marshalWriteRequest(id++, req);
 
-                std::cout << "Sending write request to server..." << '\n';
                 while (true) {
                     // retry if packet loss
                     try {
+                        std::cout << "Sending write request to server..." << '\n';
                         n = sendto(sock, marshalledReq.data(),
                                    marshalledReq.size(), 0,
                                    (const struct sockaddr *)&server, length);
@@ -332,10 +332,10 @@ int main(int argc, char *argv[]) {
                 std::cout << "Marshalling subscribe request..." << '\n';
                 marshalledReq = marshalSubscribeRequest(id++, req);
 
-                std::cout << "Sending subscribe request to server..." << '\n';
                 while (true) {
                     // retry if packet loss
                     try {
+                        std::cout << "Sending subscribe request to server..." << '\n';
                         n = sendto(sock, marshalledReq.data(),
                                    marshalledReq.size(), 0,
                                    (const struct sockaddr *)&server, length);
@@ -396,10 +396,10 @@ int main(int argc, char *argv[]) {
                 std::cout << "Marshalling replace request..." << '\n';
                 marshalledReq = marshalReplaceRequest(id++, req);
 
-                std::cout << "Sending replace request to server..." << '\n';
                 while (true) {
                     // retry if packet loss
                     try {
+                        std::cout << "Sending replace request to server..." << '\n';
                         n = sendto(sock, marshalledReq.data(),
                                    marshalledReq.size(), 0,
                                    (const struct sockaddr *)&server, length);
@@ -433,10 +433,10 @@ int main(int argc, char *argv[]) {
                 std::cout << "Marshalling delete request..." << '\n';
                 marshalledReq = marshalDeleteRequest(id++, req);
 
-                std::cout << "Sending delete request to server..." << '\n';
                 while (true) {
                     // retry if packet loss
                     try {
+                        std::cout << "Sending delete request to server..." << '\n';
                         n = sendto(sock, marshalledReq.data(),
                                    marshalledReq.size(), 0,
                                    (const struct sockaddr *)&server, length);
