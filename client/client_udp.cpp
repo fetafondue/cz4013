@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
     struct hostent *hp;
     char buffer[1024];
     std::vector<uint8_t> msg;
+    struct timeval tv;
 
     if (argc != 4) {
         std::cout << "Missing arguments" << '\n';
@@ -62,6 +63,11 @@ int main(int argc, char *argv[]) {
         msg.resize(5000);
         bzero(buffer, 1024);
         fgets(buffer, 1023, stdin);  // ignore newline char
+        // set default timeout for recv
+        tv.tv_sec = 10;
+        tv.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv));
+        
         switch (buffer[0]) {
             case '1': {
                 ReadRequest readReq;
@@ -181,9 +187,9 @@ int main(int argc, char *argv[]) {
                                    readReq.offset);
                         std::cout << "Successfully cached response" << '\n';
                     } else {
-                        std::cout
-                            << "Valid cache entry, retrieving data from cache..."
-                            << '\n';
+                        std::cout << "Valid cache entry, retrieving data from "
+                                     "cache..."
+                                  << '\n';
                         std::string data = cacheRead(
                             readReq.pathname, readReq.offset, readReq.numBytes);
                         std::cout << "Data: {" << data << "}" << '\n';
@@ -250,6 +256,26 @@ int main(int argc, char *argv[]) {
                     << "Subscribe request success, listening to server for "
                     << req.monitorIntervalSeconds << " seconds..." << '\n';
                 // TODO: whats the best way to listen to the server changes
+                long long startTime =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch())
+                        .count();
+                // set timeout for recv
+                tv.tv_sec = req.monitorIntervalSeconds;
+                tv.tv_usec = 0;
+                while (std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                               .count() -
+                           startTime <
+                       (tv.tv_sec * 1000)) {
+                    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,
+                               sizeof(tv));
+                    n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
+                                 &length);
+                    write(1, "Got an ack: ", 12);
+                    write(1, buffer, n);
+                    write(1, "\n", n);
+                }
 
                 break;
             }
