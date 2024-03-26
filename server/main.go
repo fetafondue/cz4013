@@ -21,9 +21,9 @@ func parseFlags() (port *string, sem common.InvocationSemantic) {
 	// define flags
 	port = flag.String("port", "8080", "Port for server to listen on")
 
-	inv_semantics := flag.String("inv_semantics", "alo", "Invocation semantics to use. [at-least-once (alo), at-most-once (amo)]")
+	is := flag.String("is", "alo", "Invocation semantics to use. [at-least-once (alo), at-most-once (amo)]")
 	sem = common.AT_LEAST_ONCE
-	if *inv_semantics == "amo" {
+	if *is == "amo" {
 		sem = common.AT_MOST_ONCE
 	}
 
