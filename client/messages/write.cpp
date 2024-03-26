@@ -1,5 +1,6 @@
 #include "write.h"
 
+#include <iostream>
 #include <vector>
 
 #include "message_type.h"
@@ -96,7 +97,7 @@ WriteResponse unmarshalWriteResponse(const std::vector<uint8_t> &res) {
 
 void prepareWriteRequest(WriteRequest *req) {
     char buffer[1024];
-    std::string pathname, offset, content;
+    std::string pathname, content;
 
     printf(
         "You have selected option 2, please enter the pathname of "
@@ -110,13 +111,24 @@ void prepareWriteRequest(WriteRequest *req) {
                    pathname.end());
     req->pathname = pathname;
 
-    printf("Please enter the offset\n");
-    bzero(buffer, 1024);
-    fgets(buffer, 1023, stdin);
-    for (int i = 0; i < strlen(buffer); i++) {
-        offset += buffer[i];
+    while (true) {
+        std::string offset;
+        printf("Please enter the offset\n");
+        bzero(buffer, 1024);
+        fgets(buffer, 1023, stdin);
+        for (int i = 0; i < strlen(buffer); i++) {
+            offset += buffer[i];
+        }
+        try {
+            if (stoi(offset) < 0) {
+                throw std::invalid_argument("Negative input");
+            }
+            req->offset = stoi(offset);
+            break;
+        } catch (const std::exception &e) {
+            std::cout << "Invalid input, please enter a positive integer\n";
+        }
     }
-    req->offset = stoi(offset);
 
     printf(
         "Please enter the content that you would like to write to the file\n");
@@ -126,6 +138,6 @@ void prepareWriteRequest(WriteRequest *req) {
         content += buffer[i];
     }
     content.erase(std::remove_if(content.begin(), content.end(), ::isspace),
-                   content.end());
+                  content.end());
     req->content = content;
 }

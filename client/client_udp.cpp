@@ -19,8 +19,7 @@
 #include "messages/replace.h"
 #include "messages/subscribe.h"
 #include "messages/write.h"
-
-void error(const char *msg);
+#include "messages/error.h"
 
 int main(int argc, char *argv[]) {
     int sock, n;
@@ -51,13 +50,15 @@ int main(int argc, char *argv[]) {
 
     // keep accepting requests from the user
     while (1) {
-        std::cout << "What would you like to do?\n"
+        std::cout << "\n===========================\n"
+                  << "What would you like to do?\n"
                   << "1. Read file content\n"
                   << "2. Write to file\n"
                   << "3. Monitor updates\n"
                   << "4. Replace file content\n"
                   << "5. Delete file content\n"
-                  << "6. End the program\n";
+                  << "6. End the program\n"
+                  << "===========================\n";
         // clear the vector and assign memory for it
         msg.clear();
         msg.resize(5000);
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]) {
         tv.tv_sec = 10;
         tv.tv_usec = 0;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv));
-        
+
         switch (buffer[0]) {
             case '1': {
                 ReadRequest readReq;
@@ -122,8 +123,15 @@ int main(int argc, char *argv[]) {
                     // resize buffer for message unmarshalling validation
                     msg.resize(n);
                     readResp = unmarshalReadResponse(msg);
-                    std::cout << "Got an ack, content is: {" << readResp.content
-                              << '}' << '\n';
+                    if (!readResp.success) {
+                        std::cout << "Error message: " << readResp.errorMessage
+                                  << '\n';
+                        break;
+                    }
+                    std::cout << "Got an ack, content is:"
+                              << "\n------------------------------\n"
+                              << readResp.content
+                              << "\n------------------------------\n";
                     std::cout << "Writing to cache..." << '\n';
                     cacheWrite(timeReq.pathname, readResp.content,
                                timeResp.lastModifiedUnixTime, readReq.offset);
@@ -179,20 +187,32 @@ int main(int argc, char *argv[]) {
                         // resize buffer for message unmarshalling validation
                         msg.resize(n);
                         readResp = unmarshalReadResponse(msg);
-                        std::cout << "Got an ack, content is: {"
-                                  << readResp.content << '}' << '\n';
+                        if (!readResp.success) {
+                            std::cout
+                                << "Error message: " << readResp.errorMessage
+                                << '\n';
+                            break;
+                        }
+                        std::cout << "Got an ack, content is:"
+                                  << "\n------------------------------\n"
+                                  << readResp.content
+                                  << "\n------------------------------\n";
                         std::cout << "Writing to cache..." << '\n';
                         cacheWrite(timeReq.pathname, readResp.content,
                                    timeResp.lastModifiedUnixTime,
                                    readReq.offset);
                         std::cout << "Successfully cached response" << '\n';
-                    } else {
+                    }
+                    // else just read from cache
+                    else {
                         std::cout << "Valid cache entry, retrieving data from "
                                      "cache..."
                                   << '\n';
                         std::string data = cacheRead(
                             readReq.pathname, readReq.offset, readReq.numBytes);
-                        std::cout << "Data: {" << data << "}" << '\n';
+                        std::cout << "Data:\n------------------------------\n"
+                                  << data
+                                  << "\n------------------------------\n";
                     }
                 }
                 // else, just read from cache
@@ -202,7 +222,8 @@ int main(int argc, char *argv[]) {
                         << '\n';
                     std::string data = cacheRead(
                         readReq.pathname, readReq.offset, readReq.numBytes);
-                    std::cout << "Data: {" << data << "}" << '\n';
+                    std::cout << "Data:\n------------------------------\n"
+                              << data << "\n------------------------------\n";
                 }
                 break;
             }
@@ -227,6 +248,10 @@ int main(int argc, char *argv[]) {
                 resp = unmarshalWriteResponse(msg);
                 std::cout << "Got an ack, write success is " << std::boolalpha
                           << resp.success << '\n';
+                if (!resp.success) {
+                    std::cout << "Error message: " << resp.errorMessage << '\n';
+                    break;
+                }
 
                 break;
             }
@@ -251,6 +276,10 @@ int main(int argc, char *argv[]) {
                 resp = unmarshalSubscribeResponse(msg);
                 std::cout << "Got an ack, subscribe success is "
                           << std::boolalpha << resp.success << '\n';
+                if (!resp.success) {
+                    std::cout << "Error message: " << resp.errorMessage << '\n';
+                    break;
+                }
 
                 std::cout
                     << "Subscribe request success, listening to server for "
@@ -268,13 +297,15 @@ int main(int argc, char *argv[]) {
                                .count() -
                            startTime <
                        (tv.tv_sec * 1000)) {
+                    bzero(buffer, 1024);
                     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,
                                sizeof(tv));
+
                     n = recvfrom(sock, buffer, 256, 0, (struct sockaddr *)&from,
                                  &length);
-                    write(1, "Got an ack: ", 12);
+                    write(1, "Got an ack: \n", 13);
                     write(1, buffer, n);
-                    write(1, "\n", n);
+                    write(1, "\n", 1);
                 }
 
                 break;
@@ -300,6 +331,10 @@ int main(int argc, char *argv[]) {
                 resp = unmarshalReplaceResponse(msg);
                 std::cout << "Got an ack, replace success is " << std::boolalpha
                           << resp.success << '\n';
+                if (!resp.success) {
+                    std::cout << "Error message: " << resp.errorMessage << '\n';
+                    break;
+                }
 
                 break;
             }
@@ -324,6 +359,10 @@ int main(int argc, char *argv[]) {
                 resp = unmarshalDeleteResponse(msg);
                 std::cout << "Got an ack, delete success is " << std::boolalpha
                           << resp.success << '\n';
+                if (!resp.success) {
+                    std::cout << "Error message: " << resp.errorMessage << '\n';
+                    break;
+                }
 
                 break;
             }
@@ -332,14 +371,10 @@ int main(int argc, char *argv[]) {
                 close(sock);
                 return 0;
             default:
-                error("you have entered an invalid option");
+                std::cout << "you have entered an invalid option, please enter "
+                             "1 to 6";
         }
     }
     close(sock);
     return 0;
-}
-
-void error(const char *msg) {
-    perror(msg);
-    exit(0);
 }

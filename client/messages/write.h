@@ -1,18 +1,16 @@
 #ifndef WRITE_H
 #define WRITE_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
-struct WriteRequest
-{
+struct WriteRequest {
     std::string pathname;
     uint32_t offset;
     std::string content;
 };
 
-struct WriteResponse
-{
+struct WriteResponse {
     bool success;
     std::string errorMessage;
 };

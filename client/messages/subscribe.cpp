@@ -1,5 +1,6 @@
 #include "subscribe.h"
 
+#include <iostream>
 #include <vector>
 
 #include "message_type.h"
@@ -86,7 +87,7 @@ SubscribeResponse unmarshalSubscribeResponse(const std::vector<uint8_t> &res) {
 
 void prepareSubscribeRequest(SubscribeRequest *req) {
     char buffer[1024];
-    std::string pathname, offset, content;
+    std::string pathname, content;
 
     printf(
         "You have selected option 3, please enter the pathname of "
@@ -100,12 +101,22 @@ void prepareSubscribeRequest(SubscribeRequest *req) {
                    pathname.end());
     req->pathname = pathname;
 
-    printf("Please enter the monitoring interval\n");
-    bzero(buffer, 1024);
-    fgets(buffer, 1023, stdin);
-    for (int i = 0; i < strlen(buffer); i++) {
-        offset += buffer[i];
+    while (true) {
+        std::string interval;
+        printf("Please enter the monitoring interval\n");
+        bzero(buffer, 1024);
+        fgets(buffer, 1023, stdin);
+        for (int i = 0; i < strlen(buffer); i++) {
+            interval += buffer[i];
+        }
+        try {
+            if (stoi(interval) < 0) {
+                throw std::invalid_argument("Negative input");
+            }
+            req->monitorIntervalSeconds = stoi(interval);
+            break;
+        } catch (const std::exception &e) {
+            std::cout << "Invalid input, please enter a positive integer\n";
+        }
     }
-    req->monitorIntervalSeconds = stoi(offset);
 }
-

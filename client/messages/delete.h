@@ -1,18 +1,16 @@
 #ifndef DELETE_H
 #define DELETE_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
-struct DeleteRequest
-{
+struct DeleteRequest {
     std::string pathname;
     uint32_t offset;
     uint32_t numBytes;
 };
 
-struct DeleteResponse
-{
+struct DeleteResponse {
     bool success;
     std::string errorMessage;
 };

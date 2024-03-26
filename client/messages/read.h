@@ -1,18 +1,16 @@
 #ifndef READ_H
 #define READ_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
-struct ReadRequest
-{
+struct ReadRequest {
     std::string pathname;
     uint32_t offset;
     uint32_t numBytes;
 };
 
-struct ReadResponse
-{
+struct ReadResponse {
     bool success;
     std::string content;
     std::string errorMessage;

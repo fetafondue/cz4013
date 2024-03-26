@@ -1,17 +1,15 @@
 #ifndef SUBSCRIBE_H
 #define SUBSCRIBE_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
-struct SubscribeRequest
-{
+struct SubscribeRequest {
     std::string pathname;
     uint32_t monitorIntervalSeconds;
 };
 
-struct SubscribeResponse
-{
+struct SubscribeResponse {
     bool success;
     std::string errorMessage;
 };
