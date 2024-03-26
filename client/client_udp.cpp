@@ -114,6 +114,11 @@ int main(int argc, char *argv[]) {
                     // resize buffer for message unmarshalling validation
                     msg.resize(n);
                     timeResp = unmarshalGetLastModifiedTimeResponse(msg);
+                    if (!timeResp.success) {
+                        std::cout << "Error message: " << timeResp.errorMessage
+                                  << '\n';
+                        break;
+                    }
                     std::cout
                         << "Got an ack, last modified time at server is: {"
                         << timeResp.lastModifiedUnixTime << '}' << '\n';
@@ -197,6 +202,11 @@ int main(int argc, char *argv[]) {
                     // resize buffer for message unmarshalling validation
                     msg.resize(n);
                     timeResp = unmarshalGetLastModifiedTimeResponse(msg);
+                    if (!timeResp.success) {
+                        std::cout << "Error message: " << timeResp.errorMessage
+                                  << '\n';
+                        break;
+                    }
                     std::cout
                         << "Got an ack, last modified time at server is: {"
                         << timeResp.lastModifiedUnixTime << '}' << '\n';
@@ -210,11 +220,13 @@ int main(int argc, char *argv[]) {
 
                         std::cout << "Marshalling read request..." << '\n';
                         marshalledReq = marshalReadRequest(id++, readReq);
-                        std::cout << "Sending read request to server for file {"
-                                  << readReq.pathname << "} ..." << '\n';
                         while (true) {
                             // retry if packet loss
                             try {
+                                std::cout << "Sending read request to server "
+                                             "for "
+                                          << readReq.pathname << " ..."
+                                          << '\n';
                                 n = sendto(sock, marshalledReq.data(),
                                            marshalledReq.size(), 0,
                                            (const struct sockaddr *)&server,
