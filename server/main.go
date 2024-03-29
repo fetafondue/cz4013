@@ -41,23 +41,21 @@ func getFullFileStorePath() (string, error) {
 }
 
 func handlePacket(sem common.InvocationSemantic, fileStorePath string) {
-	// Randomly decide what to do with the client's request
-	rand.Seed(time.Now().UnixNano())
-	randomChoice := rand.Intn(10) // Generate a random number between 0 and 9
-	if randomChoice < 1 {         // 10% chance of loss of request
-		log.Println("Simulating loss of request message")
-		time.Sleep(11 * time.Second)
-		return
-	} 
-	// Remaining 90% chance to proceed as usual => read from client
 	data, clientAddress, err := network.ReadFromClient()
 	if err != nil {
 		log.Println("Error reading data:", err)
 		return
 	}
-	log.Println("Simulating proceeding as usual")
 
-	// process request
+	// Randomly decide what to do with the client's request
+	rand.Seed(time.Now().UnixNano())
+	randomChoice := rand.Intn(10) // Generate a random number between 0 and 9
+	if randomChoice < 1 {         // 10% chance of loss of request
+		log.Println("Simulating loss of request message")
+		return
+	}
+
+	// Remaining 90% chance to proceed as usual => process request
 	response := apis.RouteRequest(sem, fileStorePath, clientAddress, data)	
 	if response == nil { // loss of reply
 		return
