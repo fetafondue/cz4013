@@ -45,7 +45,7 @@ func RouteRequest(sem common.InvocationSemantic, fileStorePath string, clientAdd
 	// get request message type, message ID & data
 	messageID := getMessageId(udp_request)
 	if sem == common.AT_MOST_ONCE {
-		// 2nd time for AT_MOST_ONCE => Resend the stored response
+		// repeat request for AT_MOST_ONCE => Resend the stored response
 		if response, ok := messageResponses[messageID]; ok {
 			log.Println("returning stored response with AT MOST ONCE semantics")
 			return response
@@ -71,19 +71,19 @@ func RouteRequest(sem common.InvocationSemantic, fileStorePath string, clientAdd
 	default:
 		return []byte("invalid request: not a supported message type")
 	}
+
 	// 1st time for AT_MOST_ONCE => loss of response
 	if sem == common.AT_MOST_ONCE {
 		log.Println("Simulating loss of reply message for amo")
-		time.Sleep(11*time.Second)
 		return nil
 	} else {
 		rand.Seed(time.Now().UnixNano())
 		randomChoice := rand.Intn(10) 
-		if randomChoice <= 5 {
+		if randomChoice <= 4 {
 			log.Println("Simulating loss of reply message for alo")
-			time.Sleep(11*time.Second)
 			return nil
 		}
 	}
+
 	return messageResponses[messageID] 
 }

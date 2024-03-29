@@ -114,7 +114,7 @@ void prepareSubscribeRequest(SubscribeRequest *req)
     while (true)
     {
         std::string interval;
-        printf("Please enter the monitoring interval\n");
+        printf("Please enter the monitoring interval in seconds\n");
         bzero(buffer, 1024);
         fgets(buffer, 1023, stdin);
         for (int i = 0; i < strlen(buffer); i++)
