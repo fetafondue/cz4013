@@ -4,9 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
-	"math/rand"
 	"net"
-	"time"
 
 	"github.com/cz4013/server/apis/delete"
 	getlastmodifiedtime "github.com/cz4013/server/apis/get_last_modified_time"
@@ -72,18 +70,5 @@ func RouteRequest(sem common.InvocationSemantic, fileStorePath string, clientAdd
 		return []byte("invalid request: not a supported message type")
 	}
 
-	// 1st time for AT_MOST_ONCE => loss of response
-	if sem == common.AT_MOST_ONCE {
-		log.Println("Simulating loss of reply message for amo")
-		return nil
-	} else {
-		rand.Seed(time.Now().UnixNano())
-		randomChoice := rand.Intn(10) 
-		if randomChoice <= 4 {
-			log.Println("Simulating loss of reply message for alo")
-			return nil
-		}
-	}
-
-	return messageResponses[messageID] 
+	return messageResponses[messageID]
 }

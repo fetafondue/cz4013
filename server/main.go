@@ -4,10 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"net"
 	"os"
-	"time"
 
 	"github.com/cz4013/server/apis"
 	"github.com/cz4013/server/common"
@@ -28,7 +26,7 @@ func parseFlags() (port *string, sem common.InvocationSemantic) {
 		sem = common.AT_MOST_ONCE
 	}
 
-	return 
+	return
 }
 
 func getFullFileStorePath() (string, error) {
@@ -47,19 +45,27 @@ func handlePacket(sem common.InvocationSemantic, fileStorePath string) {
 		return
 	}
 
-	// Randomly decide what to do with the client's request
-	rand.Seed(time.Now().UnixNano())
-	randomChoice := rand.Intn(10) // Generate a random number between 0 and 9
-	if randomChoice < 1 {         // 10% chance of loss of request
+	// simulating loss of request
+	var simulateReqLoss string
+	fmt.Println("\nPacket received from a client, simulate loss of REQUEST? (y/n)")
+	fmt.Scanf("%v", &simulateReqLoss)
+	if simulateReqLoss == "y" {
 		log.Println("Simulating loss of request message")
 		return
 	}
 
-	// Remaining 90% chance to proceed as usual => process request
-	response := apis.RouteRequest(sem, fileStorePath, clientAddress, data)	
-	if response == nil { // loss of reply
+	// process request
+	response := apis.RouteRequest(sem, fileStorePath, clientAddress, data)
+
+	// simulating loss of reply
+	var simulateReplyLoss string
+	fmt.Println("\nReply available for client, simulate loss of REPLY? (y/n)")
+	fmt.Scanf("%v", &simulateReplyLoss)
+	if simulateReplyLoss == "y" {
+		log.Println("Simulating loss of reply message")
 		return
 	}
+
 	// respond to client
 	err = network.SendToClient(clientAddress, response)
 	if err != nil {

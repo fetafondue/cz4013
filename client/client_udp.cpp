@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
         bzero(buffer, 1024);
         fgets(buffer, 1023, stdin);  // ignore newline char
         // set default timeout for recv
-        tv.tv_sec = 10;
+        tv.tv_sec = 15;
         tv.tv_usec = 0;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv));
 
